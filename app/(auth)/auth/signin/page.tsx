@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const router = useRouter();
+  const router = useRouter()
 
   const images = ["/hero-slid.png", "/hero-slide.png", "/hero-slidee.png"];
 
