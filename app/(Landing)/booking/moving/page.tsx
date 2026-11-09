@@ -57,8 +57,25 @@ export default function MoveOutPage() {
   };
 
   const handleContinue = () => {
-    // Save the selected rooms data to localStorage
     localStorage.setItem("moveOutRooms", JSON.stringify(rooms));
+    const roomList = Object.entries(rooms)
+      .filter(([, n]) => Number(n) > 0)
+      .map(([room, n]) => `${room} × ${n}`)
+      .join(", ");
+    localStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        serviceType: "move_out",
+        serviceName: "Moving Service",
+        serviceCategory: "Home Moving",
+        serviceData: { category: "Home Moving", rooms },
+        details: [
+          { label: "Rooms", value: roomList },
+          { label: "Total rooms", value: String(totalRooms) },
+        ],
+      })
+    );
+    localStorage.removeItem("bookingSchedule");
 
     // Navigate to the next step
     router.push("/booking-summary");
@@ -205,7 +222,7 @@ export default function MoveOutPage() {
             {/* Progress indicator */}
             <div className="mb-6 bg-gray-100 h-2 rounded-full overflow-hidden">
               <div
-                className="h-full bg-purple-600 transition-all duration-300"
+                className="h-full bg-brand-600 transition-all duration-300"
                 style={{ width: `${Math.min(totalRooms * 10, 100)}%` }}
               ></div>
             </div>
@@ -215,10 +232,10 @@ export default function MoveOutPage() {
               {Object.keys(rooms).map((room) => (
                 <div
                   key={room}
-                  className="bg-white border border-gray-200 p-4 rounded-xl flex items-center justify-between hover:border-purple-300 transition-all duration-200"
+                  className="bg-white border border-gray-200 p-4 rounded-xl flex items-center justify-between hover:border-brand-300 transition-all duration-200"
                 >
                   <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3 text-purple-600">
+                    <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center mr-3 text-brand-600">
                       {getRoomIcon(room)}
                     </div>
                     <span className="text-base font-medium text-gray-900">
@@ -230,7 +247,7 @@ export default function MoveOutPage() {
                       onClick={() => handleDecrement(room)}
                       className={`w-10 h-10 flex items-center justify-center rounded-l-lg ${
                         rooms[room] > 0
-                          ? "text-purple-600 hover:bg-gray-100"
+                          ? "text-brand-600 hover:bg-gray-100"
                           : "text-gray-300"
                       }`}
                       disabled={rooms[room] === 0}
@@ -243,7 +260,7 @@ export default function MoveOutPage() {
                     </span>
                     <button
                       onClick={() => handleIncrement(room)}
-                      className="w-10 h-10 flex items-center justify-center rounded-r-lg text-purple-600 hover:bg-gray-100"
+                      className="w-10 h-10 flex items-center justify-center rounded-r-lg text-brand-600 hover:bg-gray-100"
                       aria-label={`Increase ${room}`}
                     >
                       <span className="text-xl">+</span>
@@ -256,7 +273,7 @@ export default function MoveOutPage() {
             {/* Selected room count */}
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                <span className="font-semibold text-purple-600 text-xl">
+                <span className="font-semibold text-brand-600 text-xl">
                   {totalRooms}
                 </span>
                 <span className="ml-1 text-gray-700">rooms selected</span>
@@ -274,7 +291,7 @@ export default function MoveOutPage() {
           >
             <button
               onClick={handleContinue}
-              className={`w-full py-4 bg-purple-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-purple-700 transition-all duration-300 ${
+              className={`w-full py-4 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-all duration-300 ${
                 totalRooms === 0 ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={totalRooms === 0}

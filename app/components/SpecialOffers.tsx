@@ -11,21 +11,27 @@ export default function SpecialOffers() {
       title: "Today's Special!",
       description: "Get discount for every\norder",
       image: "/hero-img.svg",
-      bgColor: "bg-indigo-500",
+      imageType: "cutout", // transparent image, sits on the card colour
+      bgColor: "bg-brand-500",
+      fadeColor: "#6B46E6",
     },
     {
       discount: "25%",
       title: "Weekend Deal",
       description: "Book any premium service\nfor the weekend",
-      image: "/supermarket-sale-svgrepo-com.svg",
-      bgColor: "bg-blue-900",
+      image: "/cleaning2.jpg",
+      imageType: "photo", // full photo, fades into the card colour
+      bgColor: "bg-brand-900",
+      fadeColor: "#19085E",
     },
     {
       discount: "20%",
       title: "First-Time Users",
       description: "Special discount for\nnew customers",
-      image: "/tools-and-utensils-cleaning.svg",
-      bgColor: "bg-purple-600",
+      image: "/laundry3.jpg",
+      imageType: "photo",
+      bgColor: "bg-brand-600",
+      fadeColor: "#3310C2",
     },
   ];
 
@@ -57,7 +63,7 @@ export default function SpecialOffers() {
         <h2 className="text-xl text-black font-bold lg:text-2xl">Special Offers</h2>
         <a
           href="#"
-          className="text-indigo-600 text-sm lg:text-base hover:underline"
+          className="text-brand-600 text-sm lg:text-base hover:underline"
         >
           See All
         </a>
@@ -69,7 +75,22 @@ export default function SpecialOffers() {
           className={`${slides[activeSlide].bgColor} rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow`}
         >
           <div className="relative flex items-center p-6 lg:p-8">
-            <div className="text-white">
+            {slides[activeSlide].imageType === "photo" && (
+              <div className="absolute inset-y-0 right-0 w-1/2">
+                <img
+                  src={slides[activeSlide].image}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(to right, ${slides[activeSlide].fadeColor} 0%, ${slides[activeSlide].fadeColor}00 70%)`,
+                  }}
+                />
+              </div>
+            )}
+            <div className="text-white relative z-10">
               <div className="text-5xl font-bold mb-1 lg:text-6xl">
                 {slides[activeSlide].discount}
               </div>
@@ -80,13 +101,15 @@ export default function SpecialOffers() {
                 {slides[activeSlide].description}
               </p>
             </div>
-            <div className="ml-auto">
-              <img
-                src={slides[activeSlide].image}
-                alt="Promotional image"
-                className="h-24 object-contain lg:h-32"
-              />
-            </div>
+            {slides[activeSlide].imageType === "cutout" && (
+              <div className="ml-auto">
+                <img
+                  src={slides[activeSlide].image}
+                  alt="Promotional image"
+                  className="h-24 object-contain lg:h-32"
+                />
+              </div>
+            )}
           </div>
 
           {/* Slider indicators */}

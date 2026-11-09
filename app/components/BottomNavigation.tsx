@@ -12,7 +12,7 @@ export default function BottomNavigation() {
     <>
       {/* Mobile Bottom Navigation - Icons Only */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 max-w-5xl mx-auto lg:hidden z-10">
-        <a href="/" className="flex flex-col items-center text-indigo-600">
+        <a href="/" className="flex flex-col items-center text-brand-600">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -100,11 +100,11 @@ export default function BottomNavigation() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-indigo-600"
+              className="text-brand-600"
             >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span className="ml-3 text-lg font-semibold text-indigo-600">
+            <span className="ml-3 text-lg font-semibold text-brand-600">
               Klinner
             </span>
           </div>
@@ -112,7 +112,7 @@ export default function BottomNavigation() {
           <nav className="flex flex-col w-full px-4 space-y-4 flex-grow">
             <a
               href="/"
-              className="flex items-center p-2 rounded-lg bg-indigo-100 text-indigo-600"
+              className="flex items-center p-2 rounded-lg bg-brand-100 text-brand-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

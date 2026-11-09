@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
+import { PRICING, formatNaira } from "../../../../utils/pricing";
 
 export default function LaundryPage() {
   const router = useRouter();
@@ -51,8 +52,22 @@ export default function LaundryPage() {
 
   const handleContinue = () => {
     if (selectedOption) {
-      // Save the selected option to localStorage
       localStorage.setItem("laundryOption", selectedOption.title);
+      localStorage.setItem(
+        "pendingBooking",
+        JSON.stringify({
+          serviceType: "laundry",
+          serviceName: "Laundry Service",
+          serviceCategory: selectedOption.title,
+          serviceData: {
+            option: selectedOption.id,
+            service: selectedOption.title,
+            category: selectedOption.title,
+          },
+          details: [{ label: "Pricing", value: "Per laundry bag (up to ~15 items)" }],
+        })
+      );
+      localStorage.removeItem("bookingSchedule");
 
       // Navigate to the next step
       router.push("/booking-summary");
@@ -161,7 +176,7 @@ export default function LaundryPage() {
         <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -194,8 +209,8 @@ export default function LaundryPage() {
                   key={option.id}
                   className={`p-4 rounded-xl flex items-start border-2 transition-all duration-200 cursor-pointer ${
                     selectedOption?.id === option.id
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-brand-500 bg-brand-50"
+                      : "border-gray-200 hover:border-brand-300"
                   }`}
                   onClick={() => handleOptionSelect(option)}
                 >
@@ -203,18 +218,18 @@ export default function LaundryPage() {
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         selectedOption?.id === option.id
-                          ? "border-purple-600"
+                          ? "border-brand-600"
                           : "border-gray-300"
                       }`}
                     >
                       {selectedOption?.id === option.id && (
-                        <div className="w-3 h-3 rounded-full bg-purple-600"></div>
+                        <div className="w-3 h-3 rounded-full bg-brand-600"></div>
                       )}
                     </div>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center mb-1">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-2">
+                      <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-2">
                         {getLaundryIcon(option.id)}
                       </div>
                       <span className="text-lg font-medium text-gray-900">
@@ -224,15 +239,18 @@ export default function LaundryPage() {
                     <p className="text-sm text-gray-600 ml-10">
                       {option.description}
                     </p>
+                    <p className="text-sm font-semibold text-brand-600 ml-10 mt-1">
+                      {formatNaira(PRICING.laundry.options[option.id]?.price)} per bag
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Add tip */}
-            <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <div className="mt-6 bg-brand-50 p-4 rounded-lg border border-brand-100">
               <div className="flex items-start">
-                <div className="mr-3 mt-1 text-blue-500">
+                <div className="mr-3 mt-1 text-brand-500">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -249,10 +267,10 @@ export default function LaundryPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-800 font-medium">
+                  <p className="text-sm text-brand-800 font-medium">
                     Special care instructions?
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-brand-600 mt-1">
                     You'll be able to add special instructions for your laundry
                     after selecting your service.
                   </p>
@@ -271,7 +289,7 @@ export default function LaundryPage() {
           >
             <button
               onClick={handleContinue}
-              className={`w-full py-4 bg-purple-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-purple-700 transition-all duration-300 ${
+              className={`w-full py-4 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-all duration-300 ${
                 !selectedOption ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={!selectedOption}

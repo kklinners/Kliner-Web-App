@@ -89,7 +89,7 @@ export default function BookingPage() {
           Sorry, we couldn't find the service you're looking for.
         </p>
         <Link href="/">
-          <div className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 cursor-pointer">
+          <div className="bg-brand-600 text-white px-6 py-2 rounded-full hover:bg-brand-700 cursor-pointer">
             Back to Home
           </div>
         </Link>
@@ -163,11 +163,11 @@ export default function BookingPage() {
                 </span>
               </div>
               <div className="mt-2 py-2">
-                <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
+                <span className="inline-block bg-brand-100 text-brand-700 px-3 py-1 rounded-full text-sm">
                   {serviceData.name}
                 </span>
               </div>
-              <div className="mt-2 text-2xl font-semibold text-indigo-600">
+              <div className="mt-2 text-2xl font-semibold text-brand-600">
                 {serviceData.price}
               </div>
               <p className="mt-4 text-gray-600">{serviceData.description}</p>
@@ -177,7 +177,7 @@ export default function BookingPage() {
           <div className="mb-6">
             <div className="flex justify-between items-center text-black mb-4">
               <h2 className="text-xl font-bold">Photos & Videos</h2>
-              <button className="text-indigo-600 font-medium">See All</button>
+              <button className="text-brand-600 font-medium">See All</button>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {serviceData.images && serviceData.images.length > 0 ? (
@@ -211,13 +211,13 @@ export default function BookingPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-white p-4 flex gap-4 shadow-lg">
           <button
             onClick={() => router.push("/booking/user-chat")}
-            className="flex-1 border border-indigo-600 text-indigo-600 py-3 rounded-lg font-medium"
+            className="flex-1 border border-brand-600 text-brand-600 py-3 rounded-lg font-medium"
           >
             Message
           </button>
           <button
             onClick={handleBookNow}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium"
+            className="flex-1 bg-brand-600 text-white py-3 rounded-lg font-medium"
           >
             Book Now
           </button>

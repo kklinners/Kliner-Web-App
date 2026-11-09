@@ -237,7 +237,30 @@ export default function GardeningPage() {
         })
       );
 
-      // Navigate to the next step
+      const serviceTitles = selectedServices
+        .map((id) => gardenServices.find((g) => g.id === id)?.title || id)
+        .join(", ");
+      localStorage.setItem(
+        "pendingBooking",
+        JSON.stringify({
+          serviceType: "gardening",
+          serviceName: "Gardening Service",
+          serviceCategory: "Garden Care",
+          serviceData: {
+            category: "Garden Care",
+            services: selectedServices,
+            gardenSize,
+            frequency,
+          },
+          details: [
+            { label: "Services", value: serviceTitles },
+            { label: "Garden size", value: gardenSizes.find((g) => g.id === gardenSize)?.title || gardenSize },
+            { label: "Frequency", value: serviceFrequencies.find((f) => f.id === frequency)?.title || frequency },
+          ],
+        })
+      );
+      localStorage.removeItem("bookingSchedule");
+
       router.push("/booking-summary");
     }
   };

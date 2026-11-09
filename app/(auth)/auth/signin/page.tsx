@@ -1,4 +1,5 @@
 "use client";
+import { resolvePostLoginPath } from "../../../../utils/postAuthRedirect";
 import { useState, useEffect } from "react";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -6,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import AuthService from "../../../../services/authService";
+import AuthLogo from "../../AuthLogo";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -66,15 +68,13 @@ export default function LoginPage() {
           position: "top-right",
         });
 
-        // Check if all required user data fields are filled
-        const isProfileComplete = checkProfileCompleteness(userData);
-
-        // Navigate based on profile completeness
-        if (isProfileComplete) {
-          router.push("/");
-        } else {
-          router.push("/complete-profile");
-        }
+        // Admins, vendors and customers each land in their own area
+        router.push(
+          await resolvePostLoginPath({
+            role: userData.role,
+            profileComplete: checkProfileCompleteness(userData),
+          })
+        );
       } else {
         const errorMessage =
           response.error ||
@@ -142,11 +142,11 @@ export default function LoginPage() {
         style={{ backgroundImage: `url('${images[currentSlide]}')` }}
       >
         {/* Dark overlay for better text visibility */}
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-brand-950/60"></div>
 
         {/* Content container */}
         <div className="relative text-center text-white pb-10 px-6 w-full">
-          <h2 className="text-xl lg:text-2xl font-bold mb-3">
+          <h2 className="text-xl lg:text-2xl mb-3 font-semibold tracking-[-0.02em] leading-tight">
             Impeccable Service
           </h2>
           <p className="text-sm lg:text-base opacity-80 mb-4">
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-2 h-2 lg:w-3 lg:h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "bg-white" : "bg-[#787878]"
+                  index === currentSlide ? "bg-white" : "bg-white/40"
                 }`}
               ></button>
             ))}
@@ -169,50 +169,41 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
+        <AuthLogo />
         <div className="w-full max-w-md p-4 sm:p-6">
-          {/* Logo */}
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <img
-              src="/klin-logo.png"
-              alt="Logo"
-              className="w-16 h-16 sm:w-24 sm:h-24"
-            />
-          </div>
 
-          <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-[#1E1E1E]">
+          <h1 className="text-xl sm:text-2xl mb-4 sm:mb-6 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Welcome to Klinners.co
           </h1>
-          <p className="text-sm sm:text-base text-center mb-4 text-[#373737B2]">
+          <p className="text-sm sm:text-base text-center mb-4 text-brand-900/70">
             Continue with Facebook or enter your account
           </p>
 
           <div className="space-y-2">
             <button
-              className="w-[90%] max-w-[440px] sm:w-[80%] md:w-[440px] h-12 sm:h-[52px] bg-white py-1 sm:py-2 rounded flex items-center justify-center mx-auto"
-              style={{ border: "1px solid black" }}
+              className="w-[90%] max-w-[440px] sm:w-[80%] md:w-[440px] h-12 sm:h-[52px] bg-white py-1 sm:py-2 rounded flex items-center justify-center mx-auto border border-brand-200"
               disabled={isLoading}
             >
               <FaFacebook className="mr-2" style={{ color: "#1877F2" }} />
-              <span className="text-[#1E1E1EB2]">Login with Facebook</span>
+              <span className="text-brand-900/70">Login with Facebook</span>
             </button>
 
             <button
-              className="w-[90%] max-w-[440px] sm:w-[80%] md:w-[440px] h-12 sm:h-[52px] bg-white py-1 sm:py-2 rounded flex items-center justify-center mx-auto"
-              style={{ border: "1px solid black" }}
+              className="w-[90%] max-w-[440px] sm:w-[80%] md:w-[440px] h-12 sm:h-[52px] bg-white py-1 sm:py-2 rounded flex items-center justify-center mx-auto border border-brand-200"
               disabled={isLoading}
             >
               <FaGoogle className="mr-2" style={{ color: "#DB4437" }} />
-              <span className="text-[#1E1E1EB2]">Login with Google</span>
+              <span className="text-brand-900/70">Login with Google</span>
             </button>
           </div>
 
           <div className="flex items-center justify-center space-x-2 sm:space-x-4 my-4">
-            <div className="w-16 sm:w-[108px] border-t border-black"></div>
-            <p className="text-sm sm:text-base text-center text-[#373737]">
+            <div className="w-16 sm:w-[108px] border-t border-brand-200"></div>
+            <p className="text-sm sm:text-base text-center text-brand-950">
               Or login with your account
             </p>
-            <div className="w-16 sm:w-[108px] border-t border-black"></div>
+            <div className="w-16 sm:w-[108px] border-t border-brand-200"></div>
           </div>
 
           <form onSubmit={handleLogin}>
@@ -224,13 +215,12 @@ export default function LoginPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-2 pr-10 text-sm sm:text-base text-black border border-gray-300 rounded-lg focus:border-blue-500 outline-none placeholder-black"
+                  className="w-full p-2 pr-10 text-sm sm:text-base text-brand-950 border border-brand-200 rounded-lg focus:border-brand-600 outline-none placeholder:text-brand-900/60"
                   placeholder="Email"
                   required
                   disabled={isLoading}
                 />
               </div>
-
               {/* Password Field */}
               <div className="relative w-[90%] max-w-[440px] sm:w-full mx-auto">
                 <input
@@ -238,7 +228,7 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-2 pr-10 text-sm sm:text-base text-black border border-gray-300 rounded-lg focus:border-blue-500 outline-none placeholder-black"
+                  className="w-full p-2 pr-10 text-sm sm:text-base text-brand-950 border border-brand-200 rounded-lg focus:border-brand-600 outline-none placeholder:text-brand-900/60"
                   placeholder="Password"
                   required
                   disabled={isLoading}
@@ -250,16 +240,16 @@ export default function LoginPage() {
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="text-gray-500 w-5 h-5" />
+                    <EyeOff className="text-brand-900/70 w-5 h-5" />
                   ) : (
-                    <Eye className="text-gray-500 w-5 h-5" />
+                    <Eye className="text-brand-900/70 w-5 h-5" />
                   )}
                 </button>
               </div>
             </div>
 
             <div className="flex justify-between items-center mb-3 sm:mb-4 w-[90%] max-w-[440px] sm:w-full mx-auto">
-              <label className="flex items-center text-sm sm:text-base text-[#000000]">
+              <label className="flex items-center text-sm sm:text-base text-brand-950">
                 <input
                   type="checkbox"
                   className="mr-2"
@@ -271,7 +261,7 @@ export default function LoginPage() {
               </label>
               <Link
                 href="/auth/forget-password"
-                className="text-sm sm:text-base text-[#00438F]"
+                className="text-sm sm:text-base text-brand-600"
               >
                 Recovery Password?
               </Link>
@@ -279,7 +269,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-[90%] max-w-[440px] sm:w-full bg-[#3310C2] text-white text-sm sm:text-[18px] py-2 rounded-lg mx-auto block flex items-center justify-center"
+              className="w-[90%] max-w-[440px] sm:w-full bg-brand-600 text-white text-sm sm:text-[18px] py-2 rounded-lg mx-auto block flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -293,19 +283,19 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-sm sm:text-base text-center mt-4 sm:mt-6 mb-3 sm:mb-4 font-semibold text-[#1E1E1E]">
+          <p className="text-sm sm:text-base text-center mt-4 sm:mt-6 mb-3 sm:mb-4 font-semibold text-brand-950">
             Join with us?{" "}
-            <Link href="/auth/signup" className="text-blue-500">
+            <Link href="/auth/signup" className="text-brand-600">
               Create account it's free
             </Link>
           </p>
 
           <div>
-            <p className="text-xs sm:text-sm text-[#A9B4CD] w-[90%] max-w-[440px] sm:w-full mx-auto">
+            <p className="text-xs sm:text-sm text-brand-900/60 w-[90%] max-w-[440px] sm:w-full mx-auto">
               By continuing, you agree to NGservice{" "}
-              <span className="text-[#000000] font-medium">Term of Use</span>{" "}
+              <span className="text-brand-950 font-medium">Term of Use</span>{" "}
               and confirm that you have read{" "}
-              <span className="text-[#000000] font-medium">Privacy Policy</span>
+              <span className="text-brand-950 font-medium">Privacy Policy</span>
             </p>
           </div>
         </div>

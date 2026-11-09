@@ -3,12 +3,24 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SERVICE_AREAS, LAUNCH_DISTRICT } from "../../utils/serviceAreas";
 
-export default function DateTimeSelector({ isOpen, onClose, selectedItems }) {
+// onSubmit(schedule) is optional: when given, the parent handles the schedule
+// (e.g. the summary page); otherwise it is saved and we go to /booking-summary.
+export default function DateTimeSelector({
+  isOpen,
+  onClose,
+  onSubmit = null,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit?: ((schedule: { bookingDate: string; bookingTime: string; location: string; area: string }) => void) | null;
+}) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(""); // street address
+  const [area, setArea] = useState("");
   const [availableTimes, setAvailableTimes] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -102,43 +114,27 @@ export default function DateTimeSelector({ isOpen, onClose, selectedItems }) {
   };
 
   const handleSubmit = () => {
-    if (!selectedDate || !selectedTime || !location) {
+    if (!selectedDate || !selectedTime || !location.trim() || !area) {
       return; // Validate required fields
     }
 
     setIsLoading(true);
 
-    // Format the selected areas from the items object
-    const selectedAreas = [];
-    if (selectedItems) {
-      Object.keys(selectedItems).forEach((item) => {
-        for (let i = 0; i < selectedItems[item]; i++) {
-          selectedAreas.push(item);
-        }
-      });
-    }
-
-    // Create booking payload
-    const bookingData = {
-      // id would normally come from the authenticated user
-      id: "65e6023ac52ae468ab6aaa3b", // Replace with actual user ID
-      serviceName: "Cleaning",
-      serviceCategory: "Standard Home Cleaning",
-      areas: selectedAreas,
+    const schedule = {
       bookingDate: selectedDate.toISOString(),
       bookingTime: selectedTime,
-      location: location,
-      paymentStatus: "pending",
+      location: `${location.trim()}, ${area}, ${LAUNCH_DISTRICT}, Lagos`,
+      area,
     };
 
-    // Save booking data to localStorage for use on the summary page
-    localStorage.setItem("bookingData", JSON.stringify(bookingData));
-
-    // Navigate to the booking summary page
-    setTimeout(() => {
+    if (onSubmit) {
       setIsLoading(false);
-      router.push("/booking-summary");
-    }, 1000);
+      onSubmit(schedule);
+      return;
+    }
+
+    localStorage.setItem("bookingSchedule", JSON.stringify(schedule));
+    router.push("/booking-summary");
   };
 
   if (!isOpen) return null;
@@ -264,17 +260,17 @@ export default function DateTimeSelector({ isOpen, onClose, selectedItems }) {
                         ? "text-gray-300 cursor-not-allowed"
                         : "cursor-pointer"
                     }
-                    ${day.isToday ? "border border-purple-400" : ""}
+                    ${day.isToday ? "border border-brand-400" : ""}
                     ${
                       selectedDate &&
                       day.date &&
                       selectedDate.getDate() === day.date.getDate() &&
                       selectedDate.getMonth() === day.date.getMonth() &&
                       selectedDate.getFullYear() === day.date.getFullYear()
-                        ? "bg-purple-600 text-white"
+                        ? "bg-brand-600 text-white"
                         : day.isPast
                         ? ""
-                        : "hover:bg-purple-100"
+                        : "hover:bg-brand-100"
                     }
                   `}
                   onClick={() => selectDate(day)}
@@ -298,8 +294,8 @@ export default function DateTimeSelector({ isOpen, onClose, selectedItems }) {
                     py-2 px-3 rounded-lg text-sm border
                     ${
                       selectedTime === time.value
-                        ? "bg-purple-600 text-white border-purple-600"
-                        : "border-gray-200 text-gray-700 hover:border-purple-400"
+                        ? "bg-brand-600 text-white border-brand-600"
+                        : "border-gray-200 text-gray-700 hover:border-brand-400"
                     }
                   `}
                   onClick={() => setSelectedTime(time.value)}
@@ -313,31 +309,55 @@ export default function DateTimeSelector({ isOpen, onClose, selectedItems }) {
           {/* Location input */}
           <div className="mb-6">
             <label
+              htmlFor="area"
+              className="block text-base font-medium text-gray-900 mb-1"
+            >
+              Area in {LAUNCH_DISTRICT}
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Kliner is currently live in {LAUNCH_DISTRICT} only. More areas coming soon.
+            </p>
+            <select
+              id="area"
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              className="w-full p-3 mb-3 border border-gray-300 rounded-lg bg-white text-black"
+            >
+              <option value="" disabled>
+                Select your area
+              </option>
+              {SERVICE_AREAS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+            <label
               htmlFor="location"
               className="block text-base font-medium text-gray-900 mb-2"
             >
-              Service Location
+              Street address
             </label>
             <input
               id="location"
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter your address"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+              placeholder="e.g. 12 Diya Street"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
             />
           </div>
 
           {/* Submit button */}
           <button
             onClick={handleSubmit}
-            disabled={!selectedDate || !selectedTime || !location || isLoading}
+            disabled={!selectedDate || !selectedTime || !location.trim() || !area || isLoading}
             className={`
               w-full py-4 rounded-xl text-white font-medium text-lg
               ${
-                !selectedDate || !selectedTime || !location || isLoading
+                !selectedDate || !selectedTime || !location.trim() || !area || isLoading
                   ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-purple-600 hover:bg-purple-700 shadow-lg"
+                  : "bg-brand-600 hover:bg-brand-700 shadow-lg"
               }
             `}
           >

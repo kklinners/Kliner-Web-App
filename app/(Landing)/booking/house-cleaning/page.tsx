@@ -5,6 +5,13 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import DateTimeSelector from "../../../components/DateTimeSelector";
+import { calculatePrice } from "../../../../utils/pricing";
+import {
+  CleaningIcon,
+  DeepCleanIcon,
+  MoveInIcon,
+  MoveOutIcon,
+} from "../../../components/icons/KlinIcons";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
@@ -92,90 +99,16 @@ interface CleaningPriceOptions {
   frequency?: string;
 }
 
-// Calculate price client-side (matches backend logic)
+// Uses the shared naira price list (utils/pricing.js) — identical to the backend
 const calculateCleaningPrice = (
   items: { [key: string]: number },
   options: CleaningPriceOptions = {}
 ) => {
-  const {
-    category = "Standard Cleaning",
-    package: packageName = "Standard Package",
-    homeSize = "small",
-    frequency = "one-time",
-  } = options;
-
-  // Pricing constants (matches backend)
-  const CLEANING_CATEGORIES = {
-    "Standard Cleaning": { basePrice: 8000, pricePerRoom: 1200 },
-    "Deep Cleaning": { basePrice: 15000, pricePerRoom: 2000 },
-    "Move-in Cleaning": { basePrice: 20000, pricePerRoom: 2500 },
-    "Move-out Cleaning": { basePrice: 22000, pricePerRoom: 2800 },
-  };
-
-  const CLEANING_PACKAGES = {
-    "Basic Package": { multiplier: 0.8 },
-    "Standard Package": { multiplier: 1 },
-    "Premium Package": { multiplier: 1.4 },
-    "Luxury Package": { multiplier: 1.8 },
-  };
-
-  const HOME_SIZES = {
-    studio: { multiplier: 0.7 },
-    small: { multiplier: 1 },
-    medium: { multiplier: 1.5 },
-    large: { multiplier: 2.2 },
-  };
-
-  const FREQUENCIES = {
-    "one-time": { discount: 0 },
-    monthly: { discount: 0.05 },
-    "bi-weekly": { discount: 0.1 },
-    weekly: { discount: 0.15 },
-  };
-
-  const categoryData = CLEANING_CATEGORIES[category];
-  const packageData = CLEANING_PACKAGES[packageName];
-  const sizeData = HOME_SIZES[homeSize];
-  const frequencyData = FREQUENCIES[frequency];
-
-  if (!categoryData || !packageData || !sizeData || !frequencyData) {
-    return { finalPrice: 0, breakdown: {} };
-  }
-
-  // Convert frontend items to backend format for calculation
-  const backendItems = mapRoomsToBackend(items);
-  const totalItems = Object.values(backendItems).reduce(
-    (sum, count) => sum + Number(count),
-    0
-  );
-
-  if (totalItems === 0) {
-    return { finalPrice: 0, breakdown: {} };
-  }
-
-  // Calculate price
-  const baseTotal =
-    (categoryData.basePrice + totalItems * categoryData.pricePerRoom) *
-    packageData.multiplier *
-    sizeData.multiplier;
-
-  const discountedPrice = baseTotal * (1 - frequencyData.discount);
-  const finalPrice = Math.round(discountedPrice);
-
-  return {
-    finalPrice,
-    breakdown: {
-      basePrice: categoryData.basePrice,
-      roomCount: totalItems,
-      pricePerRoom: categoryData.pricePerRoom,
-      packageMultiplier: packageData.multiplier,
-      sizeMultiplier: sizeData.multiplier,
-      frequencyDiscount: frequencyData.discount,
-      subtotal: baseTotal,
-      discount: baseTotal - discountedPrice,
-      total: finalPrice,
-    },
-  };
+  const price = calculatePrice("house_cleaning", {
+    ...options,
+    items: mapRoomsToBackend(items),
+  });
+  return { finalPrice: price.total, breakdown: price };
 };
 
 interface CustomerInfoState {
@@ -231,10 +164,10 @@ export default function HouseCleaningPage() {
 
   // Service options
   const categories = [
-    { id: "Standard Cleaning", name: "Standard Cleaning", icon: "🧹" },
-    { id: "Deep Cleaning", name: "Deep Cleaning", icon: "✨" },
-    { id: "Move-in Cleaning", name: "Move-in Cleaning", icon: "📦" },
-    { id: "Move-out Cleaning", name: "Move-out Cleaning", icon: "🏠" },
+    { id: "Standard Cleaning", name: "Standard Cleaning", Icon: CleaningIcon },
+    { id: "Deep Cleaning", name: "Deep Cleaning", Icon: DeepCleanIcon },
+    { id: "Move-in Cleaning", name: "Move-in Cleaning", Icon: MoveInIcon },
+    { id: "Move-out Cleaning", name: "Move-out Cleaning", Icon: MoveOutIcon },
   ];
 
   const packages = [
@@ -354,55 +287,6 @@ export default function HouseCleaningPage() {
     }));
   };
 
-  // Book cleaning service API call
-  const bookCleaningService = async (
-    cleaningData,
-    bookingDetails,
-    customerInfo = {}
-  ) => {
-    try {
-      const authToken = getAuthToken();
-      if (!authToken) {
-        throw new Error("Authentication required. Please log in again.");
-      }
-
-      const { userId } = getUserData();
-
-      const requestData = {
-        user_id: userId,
-        cleaningData,
-        bookingDetails,
-        customerInfo,
-      };
-
-      console.log("🏠 Booking cleaning service with data:", requestData);
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/house-cleaning/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(requestData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `Booking failed: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-      return result.data;
-    } catch (error) {
-      console.error("Error booking cleaning service:", error);
-      throw error;
-    }
-  };
 
   const handleContinue = () => {
     if (totalItems === 0) {
@@ -441,6 +325,30 @@ export default function HouseCleaningPage() {
     };
 
     localStorage.setItem("cleaningItems", JSON.stringify(bookingData));
+
+    // Standard record read by the booking summary
+    const roomList = Object.entries(items)
+      .filter(([, n]) => Number(n) > 0)
+      .map(([room, n]) => `${room} × ${n}`)
+      .join(", ");
+    localStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        serviceType: "house_cleaning",
+        serviceName: "House Cleaning",
+        serviceCategory: selectedOptions.category,
+        serviceData: cleaningData,
+        customerInfo,
+        details: [
+          { label: "Package", value: selectedOptions.package },
+          { label: "Rooms", value: roomList },
+          { label: "Home size", value: selectedOptions.homeSize },
+          { label: "Frequency", value: selectedOptions.frequency },
+          { label: "Estimated time", value: getEstimatedTime() },
+        ],
+      })
+    );
+    localStorage.removeItem("bookingSchedule");
     setIsDateSelectorOpen(true);
   };
 
@@ -559,14 +467,11 @@ export default function HouseCleaningPage() {
       <DateTimeSelector
         isOpen={isDateSelectorOpen}
         onClose={() => setIsDateSelectorOpen(false)}
-        selectedItems={items}
-        bookingService={bookCleaningService}
-        pricing={pricing}
       />
 
       <div className="min-h-screen bg-gray-50">
         {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-purple-700 to-purple-900 text-white p-3 text-center">
+        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
           <p className="text-sm">Professional Cleaning Services</p>
         </div>
 
@@ -651,11 +556,11 @@ export default function HouseCleaningPage() {
                         }
                         className={`p-3 rounded-lg border-2 text-left ${
                           selectedOptions.category === category.id
-                            ? "border-purple-500 bg-purple-50"
-                            : "border-gray-200 hover:border-purple-300"
+                            ? "border-brand-500 bg-brand-50"
+                            : "border-gray-200 hover:border-brand-300"
                         }`}
                       >
-                        <span className="text-lg mr-2">{category.icon}</span>
+                        <category.Icon size={22} className="inline-block align-middle mr-2" />
                         <span className="text-sm font-medium">
                           {category.name}
                         </span>
@@ -676,8 +581,8 @@ export default function HouseCleaningPage() {
                         onClick={() => handleOptionChange("package", pkg.id)}
                         className={`w-full p-3 rounded-lg border-2 text-left ${
                           selectedOptions.package === pkg.id
-                            ? "border-purple-500 bg-purple-50"
-                            : "border-gray-200 hover:border-purple-300"
+                            ? "border-brand-500 bg-brand-50"
+                            : "border-gray-200 hover:border-brand-300"
                         }`}
                       >
                         <div className="font-medium text-sm">{pkg.name}</div>
@@ -737,7 +642,7 @@ export default function HouseCleaningPage() {
           {/* Room Selection */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   className="h-6 w-6"
                   fill="none"
@@ -770,7 +675,7 @@ export default function HouseCleaningPage() {
                 </p>
                 <div className="bg-gray-100 h-2 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-purple-600 transition-all duration-300"
+                    className="h-full bg-brand-600 transition-all duration-300"
                     style={{ width: `${Math.min(totalItems * 10, 100)}%` }}
                   />
                 </div>
@@ -778,7 +683,7 @@ export default function HouseCleaningPage() {
 
               <div className="text-right">
                 <p className="text-sm text-gray-500">Estimated Price</p>
-                <p className="text-xl font-bold text-purple-600">
+                <p className="text-xl font-bold text-brand-600">
                   ₦{pricing.finalPrice.toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500">{getEstimatedTime()}</p>
@@ -792,15 +697,15 @@ export default function HouseCleaningPage() {
                   key={item}
                   className={`bg-white border-2 p-4 rounded-xl flex items-center justify-between transition-all duration-200 ${
                     items[item] > 0
-                      ? "border-purple-400 bg-purple-50"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-brand-400 bg-brand-50"
+                      : "border-gray-200 hover:border-brand-300"
                   }`}
                 >
                   <div className="flex items-center">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
                         items[item] > 0
-                          ? "bg-purple-200 text-purple-700"
+                          ? "bg-brand-200 text-brand-700"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
@@ -815,7 +720,7 @@ export default function HouseCleaningPage() {
                       onClick={() => handleDecrement(item)}
                       className={`w-9 h-9 flex items-center justify-center rounded-l-lg ${
                         items[item] > 0
-                          ? "text-purple-600 hover:bg-gray-100"
+                          ? "text-brand-600 hover:bg-gray-100"
                           : "text-gray-300"
                       }`}
                       disabled={items[item] === 0}
@@ -828,7 +733,7 @@ export default function HouseCleaningPage() {
                     </span>
                     <button
                       onClick={() => handleIncrement(item)}
-                      className="w-9 h-9 flex items-center justify-center rounded-r-lg text-purple-600 hover:bg-gray-100"
+                      className="w-9 h-9 flex items-center justify-center rounded-r-lg text-brand-600 hover:bg-gray-100"
                       aria-label={`Increase ${item}`}
                     >
                       <span className="text-xl">+</span>
@@ -876,7 +781,7 @@ export default function HouseCleaningPage() {
           {/* Customer Information Form */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   className="h-6 w-6"
                   fill="none"
@@ -912,7 +817,7 @@ export default function HouseCleaningPage() {
                   onChange={(e) =>
                     handleOptionChange("specialInstructions", e.target.value)
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                   rows={3}
                   placeholder="Any special requests, areas that need extra attention, or specific cleaning preferences..."
                 />
@@ -935,7 +840,7 @@ export default function HouseCleaningPage() {
                     onChange={(e) =>
                       handleCustomerInfoChange("phone", e.target.value)
                     }
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="+234-xxx-xxx-xxxx"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -954,7 +859,7 @@ export default function HouseCleaningPage() {
                     onChange={(e) =>
                       handleCustomerInfoChange("address", e.target.value)
                     }
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Full address where cleaning will take place"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -973,7 +878,7 @@ export default function HouseCleaningPage() {
                   onChange={(e) =>
                     handleCustomerInfoChange("notes", e.target.value)
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                   rows={2}
                   placeholder="Access instructions, parking information, or any other details our team should know..."
                 />
@@ -1008,7 +913,7 @@ export default function HouseCleaningPage() {
                             e.target.checked
                           )
                         }
-                        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                        className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 focus:ring-2"
                       />
                       <span className="ml-2 text-sm text-gray-700">
                         {request.label}
@@ -1031,7 +936,7 @@ export default function HouseCleaningPage() {
                       onChange={(e) =>
                         handleReminderChange("sms", e.target.checked)
                       }
-                      className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                      className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 focus:ring-2"
                     />
                     <span className="ml-2 text-sm text-gray-700">
                       Send SMS reminders before service
@@ -1044,7 +949,7 @@ export default function HouseCleaningPage() {
                       onChange={(e) =>
                         handleReminderChange("email", e.target.checked)
                       }
-                      className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                      className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 focus:ring-2"
                     />
                     <span className="ml-2 text-sm text-gray-700">
                       Send email confirmations and updates
@@ -1068,7 +973,7 @@ export default function HouseCleaningPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-brand-600">
                   ₦{pricing.finalPrice.toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-500">{getEstimatedTime()}</p>
@@ -1086,7 +991,7 @@ export default function HouseCleaningPage() {
               disabled={totalItems === 0 || loading}
               className={`w-full py-3 rounded-lg font-semibold transition duration-300 ${
                 totalItems > 0 && !loading
-                  ? "bg-purple-600 hover:bg-purple-700 text-white"
+                  ? "bg-brand-600 hover:bg-brand-700 text-white"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >

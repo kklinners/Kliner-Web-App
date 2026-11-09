@@ -14,21 +14,21 @@ export default function DesktopSidebar() {
       {/* Desktop version - visible only on large screens */}
       <div className="hidden lg:block col-span-3 bg-white rounded-lg shadow-sm p-6 h-fit">
         <div className="mb-6">
-          <h3 className="font-bold text-indigo-600 text-lg mb-4">
+          <h3 className="font-bold text-brand-600 text-lg mb-4">
             My Schedule
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
-              <div className="w-2 h-10 bg-indigo-600 rounded-full mr-3"></div>
+            <div className="flex items-center p-3 bg-brand-50 rounded-lg">
+              <div className="w-2 h-10 bg-brand-600 rounded-full mr-3"></div>
               <div>
-                <p className="font-medium text-indigo-600">Standard Cleaning</p>
+                <p className="font-medium text-brand-600">Standard Cleaning</p>
                 <p className="text-sm text-gray-500">Today, 2:00 PM</p>
               </div>
             </div>
             <div className="flex items-center p-3 bg-gray-50 rounded-lg">
               <div className="w-2 h-10 bg-gray-400 rounded-full mr-3"></div>
               <div>
-                <p className="font-medium text-indigo-600">Laundry Service</p>
+                <p className="font-medium text-brand-600">Laundry Service</p>
                 <p className="text-sm text-gray-500">Tomorrow, 10:00 AM</p>
               </div>
             </div>
@@ -36,13 +36,13 @@ export default function DesktopSidebar() {
         </div>
 
         <div>
-          <h3 className="font-bold text-lg text-indigo-600 mb-4">Promotions</h3>
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-lg">
+          <h3 className="font-bold text-lg text-brand-600 mb-4">Promotions</h3>
+          <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-4 rounded-lg">
             <p className="font-bold mb-1">Weekend Special</p>
             <p className="text-sm mb-3">
               Book any service on weekend and get 15% discount
             </p>
-            <button className="bg-white text-indigo-600 text-sm py-1 px-4 rounded-full font-medium">
+            <button className="bg-white text-brand-600 text-sm py-1 px-4 rounded-full font-medium">
               Claim Now
             </button>
           </div>
@@ -55,7 +55,7 @@ export default function DesktopSidebar() {
           onClick={toggleDropdown}
           className="w-full flex items-center justify-between bg-white p-4 rounded-lg shadow-sm"
         >
-          <span className="font-bold text-indigo-600">
+          <span className="font-bold text-brand-600">
             My Schedule & Promotions
           </span>
           <svg
@@ -68,7 +68,7 @@ export default function DesktopSidebar() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`text-indigo-600 transition-transform ${
+            className={`text-brand-600 transition-transform ${
               isOpen ? "rotate-180" : ""
             }`}
           >
@@ -85,14 +85,14 @@ export default function DesktopSidebar() {
           {isOpen && (
             <div className="p-4">
               <div className="mb-6">
-                <h3 className="font-bold text-indigo-600 text-lg mb-4">
+                <h3 className="font-bold text-brand-600 text-lg mb-4">
                   My Schedule
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
-                    <div className="w-2 h-10 bg-indigo-600 rounded-full mr-3"></div>
+                  <div className="flex items-center p-3 bg-brand-50 rounded-lg">
+                    <div className="w-2 h-10 bg-brand-600 rounded-full mr-3"></div>
                     <div>
-                      <p className="font-medium text-indigo-600">
+                      <p className="font-medium text-brand-600">
                         Standard Cleaning
                       </p>
                       <p className="text-sm text-gray-500">Today, 2:00 PM</p>
@@ -101,7 +101,7 @@ export default function DesktopSidebar() {
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                     <div className="w-2 h-10 bg-gray-400 rounded-full mr-3"></div>
                     <div>
-                      <p className="font-medium text-indigo-600">
+                      <p className="font-medium text-brand-600">
                         Laundry Service
                       </p>
                       <p className="text-sm text-gray-500">
@@ -113,15 +113,15 @@ export default function DesktopSidebar() {
               </div>
 
               <div>
-                <h3 className="font-bold text-lg text-indigo-600 mb-4">
+                <h3 className="font-bold text-lg text-brand-600 mb-4">
                   Promotions
                 </h3>
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-lg">
+                <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-4 rounded-lg">
                   <p className="font-bold mb-1">Weekend Special</p>
                   <p className="text-sm mb-3">
                     Book any service on weekend and get 15% discount
                   </p>
-                  <button className="bg-white text-indigo-600 text-sm py-1 px-4 rounded-full font-medium">
+                  <button className="bg-white text-brand-600 text-sm py-1 px-4 rounded-full font-medium">
                     Claim Now
                   </button>
                 </div>

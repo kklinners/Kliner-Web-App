@@ -5,6 +5,16 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 
+const STATUS_LABELS = {
+  pending: "Awaiting payment",
+  confirmed: "Finding a partner",
+  assigned: "Team assigned",
+  accepted: "Team confirmed",
+  in_progress: "In progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
 const getAuthToken = () => {
@@ -38,7 +48,7 @@ export default function BookingsDashboard() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/bookings`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/services/my-services`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -49,7 +59,23 @@ export default function BookingsDashboard() {
       }
 
       const result = await response.json();
-      setBookings(result.data || []);
+      // Map the backend's service records to the fields this page displays
+      const services = result.data?.services || [];
+      setBookings(
+        services.map((s) => ({
+          id: s.id,
+          booking_id: s.service_id,
+          service_type: s.serviceName || s.serviceType,
+          booking_date: s.bookingDate,
+          booking_time: s.bookingTime,
+          location: s.location,
+          amount: s.serviceRate, // naira
+          status: s.status,
+          payment_status: s.paymentStatus,
+          partner_name: s.partnerName,
+          partner_phone: s.partnerPhone,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setError(error.message);
@@ -66,6 +92,9 @@ export default function BookingsDashboard() {
     const statusStyles = {
       pending: "bg-yellow-100 text-yellow-800",
       confirmed: "bg-blue-100 text-blue-800",
+      assigned: "bg-blue-100 text-blue-800",
+      accepted: "bg-brand-100 text-brand-700",
+      in_progress: "bg-cyan-100 text-cyan-800",
       completed: "bg-green-100 text-green-800",
       cancelled: "bg-red-100 text-red-800",
     };
@@ -76,7 +105,7 @@ export default function BookingsDashboard() {
           statusStyles[status] || statusStyles.pending
         }`}
       >
-        {status?.charAt(0).toUpperCase() + status?.slice(1) || "Pending"}
+        {STATUS_LABELS[status] || "Pending"}
       </span>
     );
   };
@@ -85,7 +114,7 @@ export default function BookingsDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your bookings...</p>
         </div>
       </div>
@@ -117,7 +146,7 @@ export default function BookingsDashboard() {
               </div>
               <button
                 onClick={() => router.push("/house-cleaning")}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
                 Book New Service
               </button>
@@ -157,7 +186,7 @@ export default function BookingsDashboard() {
               </p>
               <button
                 onClick={() => router.push("/house-cleaning")}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 Book Your First Service
               </button>
@@ -209,10 +238,26 @@ export default function BookingsDashboard() {
                       <h4 className="text-sm font-medium text-gray-700 mb-1">
                         Amount
                       </h4>
-                      <p className="text-xl font-bold text-purple-600">
+                      <p className="text-xl font-bold text-brand-600">
                         ₦{booking.amount?.toLocaleString() || "0"}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t text-sm">
+                    <span className="text-gray-600">Your team: </span>
+                    {booking.partner_name ? (
+                      <span className="font-semibold text-gray-900">
+                        {booking.partner_name}
+                        {booking.partner_phone && ` · ${booking.partner_phone}`}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">
+                        {booking.payment_status === "paid"
+                          ? "We're assigning your Kliner team"
+                          : "Assigned after payment"}
+                      </span>
+                    )}
                   </div>
 
                   {booking.payment_status && (
@@ -223,7 +268,7 @@ export default function BookingsDashboard() {
                         </span>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            booking.payment_status === "success"
+                            booking.payment_status === "paid"
                               ? "bg-green-100 text-green-800"
                               : "bg-yellow-100 text-yellow-800"
                           }`}

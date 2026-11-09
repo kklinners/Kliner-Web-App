@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthService from "../../../../services/authService";
+import AuthLogo from "../../AuthLogo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -66,19 +67,17 @@ export default function ForgotPasswordPage() {
         className="hidden lg:flex w-1/2 h-screen bg-cover bg-center items-end justify-center relative transition-all duration-1000"
         style={{ backgroundImage: `url('${images[currentSlide]}')` }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-brand-950/60"></div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
+        <AuthLogo />
         <div className="w-full max-w-md p-6">
-          <div className="flex justify-center mb-6">
-            <img src="/klin-logo.png" alt="Logo" className="w-20 h-20" />
-          </div>
 
-          <h1 className="text-2xl font-bold mb-4 text-center text-[#1E1E1E]">
+          <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Forgot Password
           </h1>
-          <p className="text-base text-center mb-4 text-[#373737B2]">
+          <p className="text-base text-center mb-4 text-brand-900/70">
             Enter your email address to receive a password reset code
           </p>
 
@@ -96,14 +95,14 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isSending}
-                className="w-full px-4 py-2 border-2 text-black rounded-lg focus:border-blue-500 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2 border-2 text-brand-950 rounded-lg focus:border-brand-600 focus:ring-brand-500 outline-none"
                 placeholder="Enter your email"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#3310C2] border border-[#3310C2] text-lg text-[#ffff] py-2 rounded-lg mx-auto block mb-4 flex items-center justify-center"
+              className="w-full bg-brand-600 border border-brand-600 text-lg text-white py-2 rounded-lg mx-auto block mb-4 flex items-center justify-center"
               disabled={isSending}
             >
               {isSending ? (
@@ -120,7 +119,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center mt-4">
             <Link
               href="/auth/sigin"
-              className="text-[#00438F] text-sm hover:underline"
+              className="text-brand-600 text-sm hover:underline"
             >
               Back to Login
             </Link>
@@ -129,7 +128,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-brand-950/60 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
             <div className="mb-4 text-green-500">
               <svg
@@ -147,16 +146,16 @@ export default function ForgotPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-[#1E1E1E]">
+            <h2 className="text-xl text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
               Password Reset Code Sent!
             </h2>
-            <p className="text-[#373737B2] mt-2">
+            <p className="text-brand-900/70 mt-2">
               We've sent a verification code to <strong>{email}</strong>. Please
               check your email.
             </p>
             <button
               onClick={handleCloseModal}
-              className="mt-4 px-4 py-2 bg-[#3310C2] text-white rounded-lg hover:bg-[#3310C2]/90 transition"
+              className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-600/90 transition"
             >
               Verify Code
             </button>

@@ -237,7 +237,7 @@ const UserProfile = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -319,7 +319,7 @@ const UserProfile = () => {
             ) : (
               <button
                 onClick={() => toggleEdit(section)}
-                className="text-gray-500 hover:text-indigo-600"
+                className="text-gray-500 hover:text-brand-600"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -346,7 +346,7 @@ const UserProfile = () => {
               name={section}
               value={value}
               onChange={handleInputChange}
-              className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder={placeholder}
               disabled={isLoading}
             />
@@ -369,12 +369,12 @@ const UserProfile = () => {
       <div className="flex-1 p-8 bg-white rounded-lg shadow-sm mx-4 my-4 lg:ml-56">
         <div className="max-w-4xl mx-auto">
           {/* Profile completion section */}
-          {/* <div className="bg-gradient-to-r from-indigo-100 to-indigo-200 rounded-lg p-6 mb-8">
+          {/* <div className="bg-gradient-to-r from-brand-100 to-brand-200 rounded-lg p-6 mb-8">
             <div className="flex items-center mb-3">
               <div className="relative h-12 w-12 rounded-full bg-white flex items-center justify-center mr-4">
-                <div className="absolute h-full w-full rounded-full border-4 border-indigo-500">
+                <div className="absolute h-full w-full rounded-full border-4 border-brand-500">
                   <div
-                    className="absolute top-0 left-0 h-full w-full rounded-full border-4 border-indigo-500"
+                    className="absolute top-0 left-0 h-full w-full rounded-full border-4 border-brand-500"
                     style={{
                       clipPath: `polygon(0 0, ${
                         userInfo?.profileCompletionStatus || 0
@@ -385,15 +385,15 @@ const UserProfile = () => {
                     }}
                   ></div>
                 </div>
-                <span className="text-indigo-500 font-bold text-sm">
+                <span className="text-brand-500 font-bold text-sm">
                   {userInfo?.profileCompletionStatus || 0}%
                 </span>
               </div>
               <div>
-                <h3 className="text-indigo-800 font-semibold">
+                <h3 className="text-brand-800 font-semibold">
                   Complete profile
                 </h3>
-                <p className="text-indigo-600 text-sm">
+                <p className="text-brand-600 text-sm">
                   Complete your profile to unlock all features
                 </p>
               </div>
@@ -420,7 +420,7 @@ const UserProfile = () => {
                   href={userInfo.profileImage.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 underline text-sm"
+                  className="text-brand-600 underline text-sm"
                 >
                   Test URL in new tab
                 </a>
@@ -449,7 +449,7 @@ const UserProfile = () => {
                   {profileData.name}
                 </h3>
                 <div className="mt-4 space-x-2">
-                  <label className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer">
+                  <label className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 cursor-pointer">
                     Upload New Picture
                     <input
                       type="file"
@@ -510,7 +510,7 @@ const UserProfile = () => {
                       </p>
                     </div>
                   </div>
-                  <button className="text-gray-500 hover:text-indigo-600">
+                  <button className="text-gray-500 hover:text-brand-600">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -604,7 +604,7 @@ const UserProfile = () => {
                       ) : (
                         <button
                           onClick={() => toggleEdit("city")}
-                          className="text-gray-500 hover:text-indigo-600"
+                          className="text-gray-500 hover:text-brand-600"
                         >
                           <svg
                             className="h-5 w-5"
@@ -630,7 +630,7 @@ const UserProfile = () => {
                         name="city"
                         value={profileData.city}
                         onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
                         placeholder="Enter your city"
                         disabled={isLoading}
                       />
@@ -690,7 +690,7 @@ const UserProfile = () => {
                       ) : (
                         <button
                           onClick={() => toggleEdit("state")}
-                          className="text-gray-500 hover:text-indigo-600"
+                          className="text-gray-500 hover:text-brand-600"
                         >
                           <svg
                             className="h-5 w-5"
@@ -716,7 +716,7 @@ const UserProfile = () => {
                         name="state"
                         value={profileData.state}
                         onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
                         placeholder="Enter your state"
                         disabled={isLoading}
                       />

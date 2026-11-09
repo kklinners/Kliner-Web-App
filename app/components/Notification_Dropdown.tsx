@@ -1,9 +1,17 @@
 // File: components/Notification_Dropdown.tsx
 "use client";
-import { useState } from "react";
+import type { ComponentType } from "react";
+import {
+  WalletIcon,
+  RepairsIcon,
+  GiftIcon,
+  CardIcon,
+  UserCheckIcon,
+  type KlinIconProps,
+} from "./icons/KlinIcons";
 
 interface NotificationItemProps {
-  icon: string;
+  icon: ComponentType<KlinIconProps>;
   bgColor: string;
   title: string;
   description: string;
@@ -20,19 +28,16 @@ interface NotificationDropdownProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
-  icon,
+  icon: Icon,
   bgColor,
   title,
   description,
 }) => (
   <div className="flex items-start p-4 bg-gray-50 rounded-lg mb-3">
     <div
-      className={`flex items-center justify-center ${bgColor} text-white w-12 h-12 rounded-full mr-3 relative`}
+      className={`flex items-center justify-center shrink-0 ${bgColor} w-12 h-12 rounded-2xl mr-3`}
     >
-      <span className="text-xl lg:text-2lg">{icon}</span>
-      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-pink-500"></div>
-      <div className="absolute top-1 -left-1 w-2 h-2 rounded-full bg-indigo-300 opacity-70"></div>
-      <div className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full bg-indigo-300 opacity-70"></div>
+      <Icon size={28} />
     </div>
     <div>
       <p className="font-bold text-black">{title}</p>
@@ -46,14 +51,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 }) => {
   const todayItems: NotificationItemProps[] = [
     {
-      icon: "💰",
-      bgColor: "bg-indigo-500",
+      icon: WalletIcon,
+      bgColor: "bg-brand-100",
       title: "Payment Successful!",
       description: "You have made a services payment",
     },
     {
-      icon: "🧰",
-      bgColor: "bg-pink-500",
+      icon: RepairsIcon,
+      bgColor: "bg-rose-50",
       title: "New Category Services!",
       description: "Now the plumbing services is available",
     },
@@ -61,8 +66,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const yesterdayItems: NotificationItemProps[] = [
     {
-      icon: "🎁",
-      bgColor: "bg-yellow-400",
+      icon: GiftIcon,
+      bgColor: "bg-pink-50",
       title: "Today's Special Offers",
       description: "You get a special promo today!",
     },
@@ -70,14 +75,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const pastItems: NotificationItemProps[] = [
     {
-      icon: "💳",
-      bgColor: "bg-indigo-500",
+      icon: CardIcon,
+      bgColor: "bg-brand-100",
       title: "Credit Card Connected!",
       description: "Credit Card has been linked!",
     },
     {
-      icon: "👤",
-      bgColor: "bg-green-500",
+      icon: UserCheckIcon,
+      bgColor: "bg-green-50",
       title: "Account Setup Successful!",
       description: "Your account has been created!",
     },

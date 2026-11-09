@@ -1,487 +1,316 @@
-// pages/booking-summary.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
-import Cookies from "js-cookie"; // Make sure to install this package: npm install js-cookie
+import Cookies from "js-cookie";
+import DateTimeSelector from "../../components/DateTimeSelector";
+import { calculatePrice, formatNaira } from "../../../utils/pricing";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+
+// Where "Edit Booking" sends the user for each service
+const EDIT_ROUTES = {
+  house_cleaning: "/booking/house-cleaning",
+  laundry: "/booking/laundry",
+  move_out: "/booking/moving",
+  repairs: "/booking/repairs",
+  gardening: "/booking/gardning",
+};
+
+const readJSON = (key) => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+};
+
+const formatTime = (time) => {
+  if (!time) return "";
+  if (/am|pm/i.test(time)) return time; // already "8:00 AM"
+  const [h, m = "00"] = time.split(":");
+  const hour = parseInt(h, 10);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${m} ${suffix}`;
+};
+
+const formatDate = (dateString) =>
+  dateString
+    ? new Date(dateString).toLocaleDateString("en-NG", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
+
+const SectionHeader = ({ title, subtitle, icon }) => (
+  <div className="flex items-center mb-6">
+    <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icon} />
+      </svg>
+    </div>
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      <p className="text-sm text-gray-500">{subtitle}</p>
+    </div>
+  </div>
+);
+
+const Row = ({ label, children, highlight = false }) => (
+  <div className="border-b pb-4 flex justify-between gap-4">
+    <span className="text-gray-600">{label}</span>
+    <span className={`text-right ${highlight ? "text-brand-600 font-semibold" : "text-gray-900 font-semibold"}`}>
+      {children}
+    </span>
+  </div>
+);
+
+const ICONS = {
+  service:
+    "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+  calendar:
+    "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+  money:
+    "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+};
 
 export default function BookingSummary() {
   const router = useRouter();
-  const [bookingData, setBookingData] = useState(null);
+  const [booking, setBooking] = useState(null); // { serviceType, serviceName, serviceCategory, serviceData, details }
+  const [schedule, setSchedule] = useState(null); // { bookingDate, bookingTime, location }
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Load booking data from localStorage
-    const loadBookingData = () => {
-      try {
-        const storedBookingData = localStorage.getItem("bookingData");
-        if (storedBookingData) {
-          setBookingData(JSON.parse(storedBookingData));
-        } else {
-          // If no booking data, redirect back to cleaning page
-          router.push("/house-cleaning");
-        }
-      } catch (error) {
-        console.error("Error loading booking data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBookingData();
-  }, [router]);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-
-    const [hours, minutes] = timeString.split(":");
-    const hour = parseInt(hours, 10);
-
-    if (hour === 0) {
-      return "12:00 AM";
-    } else if (hour < 12) {
-      return `${hour}:${minutes} AM`;
-    } else if (hour === 12) {
-      return `12:${minutes} PM`;
-    } else {
-      return `${hour - 12}:${minutes} PM`;
-    }
-  };
-
-  const handleConfirmBooking = async () => {
-    setLoading(true);
-
-    try {
-      // Retrieve the auth token from cookies
-      const authToken = Cookies.get("auth_token");
-
-      if (!authToken) {
-        alert("Authentication required. Please log in again.");
-        setLoading(false);
-        return;
-      }
-
-      const userData = JSON.parse(localStorage.getItem("user_data") || "{}");
-      const userId = userData.user_id;
-
-      if (!userId) {
-        alert("User ID not found. Please log in again.");
-        setLoading(false);
-        return;
-      }
-
-      // Calculate service rate
-      const basePrice = 5000;
-      const pricePerItem = 2000;
-      const totalItems = bookingData.areas?.length || 0;
-      const serviceRate = ((basePrice + totalItems * pricePerItem) / 100).toFixed(2);
-
-      const serviceData = {
-        user_id: userId,
-        serviceName: bookingData.serviceName || "Cleaning",
-        serviceCategory: bookingData.serviceCategory || "Standard Home Cleaning",
-        areas: bookingData.areas || [],
-        bookingDate: bookingData.bookingDate,
-        bookingTime: bookingData.bookingTime,
-        location: bookingData.location,
-        serviceRate,
-      };
-
-      // Make the API call to your backend
-      const response = await fetch(
-        "https://klinner.onrender.com/api/v1/service/create-service",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(serviceData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        alert(`Server error: ${response.status} ${errorText}`);
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      const { authorization_url, access_code, reference } = data.data.payment;
-      const serviceId = data.data.cleaningService._id;
-
-      // Store booking data in localStorage so the confirmation page can access it
-      const confirmedBooking = {
-        ...bookingData,
-        id: serviceId,
-        confirmed: true,
-        paymentStatus: "pending",
-        paymentReference: reference,
-      };
-      
-      localStorage.setItem("bookingData", JSON.stringify(confirmedBooking));
-
-      // Redirect to payment page
-      window.location.href = authorization_url;
-    } catch (error) {
-      console.error("Error during booking confirmation:", error);
-      setLoading(false);
-      alert(`Booking failed: ${error.message}`);
-    }
-  };
-
-  const handleEditBooking = () => {
-    router.push("/house-cleaning");
-  };
+    const pending = readJSON("pendingBooking");
+    const stored = readJSON("bookingSchedule");
+    // Schedules saved before area selection existed are incomplete
+    const savedSchedule = stored?.area ? stored : null;
+    setBooking(pending);
+    setSchedule(savedSchedule);
+    if (pending && !savedSchedule) setIsSchedulerOpen(true);
+    setLoading(false);
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen text-black flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700">Loading your booking details...</p>
         </div>
       </div>
     );
   }
 
-  if (!bookingData) {
+  if (!booking) {
     return (
-      <div className="min-h-screen text-black flex items-center justify-center bg-gray-50">
-        <div className="text-center p-6 bg-white rounded-lg shadow-md">
-          <svg
-            className="w-16 h-16 text-red-500 mx-auto mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            No Booking Data Found
-          </h2>
+      <div className="min-h-screen text-black flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center p-6 bg-white rounded-lg shadow-md max-w-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">No Booking Found</h2>
           <p className="text-gray-600 mb-4">
-            We couldn't find your booking information. Let's start over.
+            We couldn&apos;t find your booking information. Let&apos;s start over.
           </p>
           <button
-            onClick={() => router.push("/house-cleaning")}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            onClick={() => router.push("/")}
+            className="bg-brand-600 text-white px-6 py-2 rounded-lg hover:bg-brand-700"
           >
-            Start New Booking
+            Choose a Service
           </button>
         </div>
       </div>
     );
   }
 
-  // Calculate estimated time
-  const calculateEstimatedTime = () => {
-    if (!bookingData.areas) return "N/A";
+  // Same calculation the backend uses before charging
+  const price = calculatePrice(booking.serviceType, booking.serviceData);
 
-    const totalItems = bookingData.areas.length;
-    const baseTime = 60; // 60 minutes base time
-    const timePerItem = 30; // 30 minutes per item
-    const totalMinutes = baseTime + totalItems * timePerItem;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    return `${hours}h ${minutes > 0 ? `${minutes}m` : ""}`;
+  const handleScheduleSubmit = (newSchedule) => {
+    localStorage.setItem("bookingSchedule", JSON.stringify(newSchedule));
+    setSchedule(newSchedule);
+    setIsSchedulerOpen(false);
   };
 
-  // Calculate estimated price
-  const calculatePrice = () => {
-    if (!bookingData.areas) return 0;
+  const handleConfirmBooking = async () => {
+    setError("");
+    if (!schedule) {
+      setIsSchedulerOpen(true);
+      return;
+    }
 
-    const basePrice = 500000; // Base price in cents (₦50)
-    const pricePerItem = 200000; // Price per area in cents (₦20)
-    const totalItems = bookingData.areas.length;
+    const authToken = Cookies.get("auth_token");
+    const userId = readJSON("user_data")?.user_id;
+    if (!authToken || !userId) {
+      setError("Please log in again to complete your booking.");
+      return;
+    }
 
-    return ((basePrice + totalItems * pricePerItem) / 100).toFixed(2);
+    setSubmitting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/services/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          serviceType: booking.serviceType,
+          serviceData: { ...booking.serviceData, estimatedPrice: price.total },
+          bookingDetails: schedule,
+          customerInfo: booking.customerInfo || {},
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || `Booking failed (${response.status})`);
+      }
+
+      const { authorization_url, reference, amount_naira } = data.data.payment;
+
+      // Saved for the confirmation page
+      localStorage.setItem(
+        "bookingData",
+        JSON.stringify({
+          id: data.data.service?._id,
+          serviceName: booking.serviceName,
+          serviceCategory: booking.serviceCategory,
+          details: booking.details,
+          ...schedule,
+          amount: amount_naira,
+          paymentStatus: "pending",
+          paymentReference: reference,
+        })
+      );
+
+      window.location.href = authorization_url;
+    } catch (err) {
+      console.error("Booking failed:", err);
+      setError(err.message || "Booking failed. Please try again.");
+      setSubmitting(false);
+    }
   };
 
   return (
     <>
       <Head>
-        <title>Booking Summary | Home Services</title>
-        <meta name="description" content="Review your booking details" />
+        <title>Booking Summary | Kliner</title>
       </Head>
 
+      <DateTimeSelector
+        isOpen={isSchedulerOpen}
+        onClose={() => setIsSchedulerOpen(false)}
+        onSubmit={handleScheduleSubmit}
+      />
+
       <div className="min-h-screen text-black bg-gray-50">
-        {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-purple-700 to-purple-900 text-white p-3 text-center">
-          <p className="text-sm">Professional Cleaning Services</p>
+        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
+          <p className="text-sm">{booking.serviceName}</p>
         </div>
 
-        {/* Header */}
         <div className="sticky top-0 z-10 bg-white p-4 flex items-center border-b shadow-sm">
           <button
             onClick={() => router.back()}
-            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full transition-all"
+            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full"
             aria-label="Go back"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Booking Summary
-            </h1>
-            <p className="text-sm text-gray-500 hidden md:block">
-              Review your cleaning service details
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Booking Summary</h1>
+            <p className="text-sm text-gray-500 hidden md:block">Review your booking before you pay</p>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8 pb-32">
+        <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8 pb-40">
           {/* Service Details */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-medium text-gray-900">
-                  Service Details
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Overview of your cleaning service
-                </p>
-              </div>
-            </div>
-
+            <SectionHeader title="Service Details" subtitle={`Overview of your ${booking.serviceName.toLowerCase()}`} icon={ICONS.service} />
             <div className="space-y-4">
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service Type</span>
-                  <span className="font-medium text-gray-900">
-                    {bookingData.serviceCategory || "Standard Home Cleaning"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Areas to Clean</span>
-                  <span className="font-medium text-gray-900">
-                    {bookingData.areas?.length || 0} areas
-                  </span>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {bookingData.areas?.map((area, index) => (
-                      <li key={index} className="flex items-center">
-                        <svg
-                          className="h-5 w-5 text-purple-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-gray-800">{area}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Estimated Time</span>
-                  <span className="font-medium text-purple-600">
-                    {calculateEstimatedTime()}
-                  </span>
-                </div>
-              </div>
+              <Row label="Service">{booking.serviceCategory}</Row>
+              <Row label="Done by">A Kliner team in your area</Row>
+              {(booking.details || []).map((d) => (
+                <Row key={d.label} label={d.label}>{d.value}</Row>
+              ))}
             </div>
           </div>
 
-          {/* Schedule Details */}
+          {/* Schedule */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-medium text-gray-900">
-                  Schedule Details
-                </h2>
-                <p className="text-sm text-gray-500">
-                  When and where we'll be cleaning
-                </p>
-              </div>
+            <div className="flex items-start justify-between">
+              <SectionHeader title="Schedule Details" subtitle="When and where we'll come" icon={ICONS.calendar} />
+              <button onClick={() => setIsSchedulerOpen(true)} className="text-sm text-brand-600 font-semibold hover:underline">
+                {schedule ? "Change" : "Add"}
+              </button>
             </div>
-
-            <div className="space-y-4">
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date</span>
-                  <span className="font-medium text-gray-900">
-                    {formatDate(bookingData.bookingDate)}
-                  </span>
-                </div>
+            {schedule ? (
+              <div className="space-y-4">
+                <Row label="Date">{formatDate(schedule.bookingDate)}</Row>
+                <Row label="Time">{formatTime(schedule.bookingTime)}</Row>
+                <Row label="Area">{schedule.area}</Row>
+                <Row label="Address">{schedule.location}</Row>
               </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Time</span>
-                  <span className="font-medium text-gray-900">
-                    {formatTime(bookingData.bookingTime)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Location</span>
-                  <span className="font-medium text-gray-900">
-                    {bookingData.location}
-                  </span>
-                </div>
-              </div>
-            </div>
+            ) : (
+              <button
+                onClick={() => setIsSchedulerOpen(true)}
+                className="w-full py-3 border-2 border-dashed border-brand-300 text-brand-600 rounded-lg font-semibold hover:bg-brand-50"
+              >
+                Choose date, time &amp; address
+              </button>
+            )}
           </div>
 
-          {/* Pricing Details */}
+          {/* Pricing */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-medium text-gray-900">
-                  Pricing Details
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Breakdown of your service cost
-                </p>
-              </div>
-            </div>
-
+            <SectionHeader title="Pricing Details" subtitle="Breakdown of your service cost" icon={ICONS.money} />
             <div className="space-y-4">
-              <div className="border-b pb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Base Fee</span>
-                  <span className="font-medium text-gray-900">₦5000.00</span>
-                </div>
-              </div>
-
-              <div className="border-b pb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Areas Fee ({bookingData.areas?.length || 0} × ₦2000.00)
-                  </span>
-                  <span className="font-medium text-gray-900">
-                    ₦{(((bookingData.areas?.length || 0) * 2000)).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">Total</span>
-                  <span className="font-bold text-purple-600 text-xl">
-                    ₦{calculatePrice()}
-                  </span>
-                </div>
+              <Row label="Base Fee">{formatNaira(price.basePrice)}</Row>
+              {price.additionalCharges.map((c) => (
+                <Row key={c.description} label={c.description}>{formatNaira(c.amount)}</Row>
+              ))}
+              {price.discounts.map((d) => (
+                <Row key={d.description} label={d.description}>
+                  <span className="text-green-600">−{formatNaira(d.amount)}</span>
+                </Row>
+              ))}
+              <div className="pt-2 flex justify-between">
+                <span className="text-gray-800 font-semibold">Total</span>
+                <span className="font-bold text-brand-600 text-xl">{formatNaira(price.total)}</span>
               </div>
             </div>
           </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 text-sm">{error}</div>
+          )}
         </div>
 
-        {/* Fixed bottom action buttons */}
-        <div className="fixed bottom-0 mt-6 left-0 right-0 p-4 bg-white border-t shadow-md">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-md">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-3">
             <button
-              onClick={handleEditBooking}
-              className="py-3 px-6 border border-purple-600 text-purple-600 rounded-xl text-lg font-medium hover:bg-purple-50 transition-colors md:flex-1"
+              onClick={() => router.push(EDIT_ROUTES[booking.serviceType] || "/")}
+              className="py-3 px-6 border border-brand-600 text-brand-600 rounded-xl text-lg font-semibold hover:bg-brand-50 md:flex-1"
             >
               Edit Booking
             </button>
             <button
               onClick={handleConfirmBooking}
-              className="py-3 px-6 bg-purple-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-purple-700 transition-colors md:flex-1"
+              disabled={submitting || price.total <= 0}
+              className="py-3 px-6 bg-brand-600 text-white rounded-xl text-lg font-semibold shadow-lg hover:bg-brand-700 md:flex-1"
             >
-              Confirm & Pay
+              {submitting ? "Redirecting to payment..." : `Confirm & Pay ${formatNaira(price.total)}`}
             </button>
           </div>
         </div>
       </div>
     </>
   );
-
 }

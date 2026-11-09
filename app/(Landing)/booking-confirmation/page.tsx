@@ -5,6 +5,9 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Head from "next/head";
 import Cookies from "js-cookie";
+import { formatNaira } from "../../../utils/pricing";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
 // Create a separate component that uses searchParams
 function BookingVerification({
@@ -49,7 +52,7 @@ function BookingVerification({
       const authToken = Cookies.get("auth_token");
 
       const response = await fetch(
-        `https://klinner.onrender.com/api/v1/payments/verify`,
+        `${API_BASE_URL}/api/v1/services/verify-payment`,
         {
           method: "POST",
           headers: {
@@ -93,7 +96,7 @@ function LoadingScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-gray-700">Verifying your payment...</p>
       </div>
     </div>
@@ -126,8 +129,8 @@ function NoBookingFound({ router }) {
           We couldn't find your booking information. Let's start over.
         </p>
         <button
-          onClick={() => router.push("/house-cleaning")}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          onClick={() => router.push("/")}
+          className="bg-brand-600 text-white px-6 py-2 rounded-lg hover:bg-brand-700 transition-colors"
         >
           Start New Booking
         </button>
@@ -226,12 +229,20 @@ function BookingDetails({
             {formatTime(bookingData.bookingTime)}
           </span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Areas:</span>
-          <span className="font-medium text-gray-900">
-            {bookingData.areas?.length || 0} areas
-          </span>
-        </div>
+        {(bookingData.details || []).map((d) => (
+          <div key={d.label} className="flex justify-between gap-4">
+            <span className="text-gray-600">{d.label}:</span>
+            <span className="font-medium text-gray-900 text-right">{d.value}</span>
+          </div>
+        ))}
+        {bookingData.amount != null && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Amount:</span>
+            <span className="font-semibold text-brand-600">
+              {formatNaira(bookingData.amount)}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-gray-600">Location:</span>
           <span className="font-medium text-gray-900">
@@ -258,7 +269,7 @@ function BookingDetails({
         </div>
         <div className="flex justify-between pt-2 border-t">
           <span className="text-gray-800 font-semibold">Booking ID:</span>
-          <span className="font-medium text-purple-600">
+          <span className="font-medium text-brand-600">
             {bookingData.id ||
               `#BK${Math.floor(Math.random() * 900000) + 100000}`}
           </span>
@@ -283,21 +294,21 @@ function ActionButtons({ paymentStatus, router }) {
       {paymentStatus === "failed" && (
         <button
           onClick={() => router.push("/booking-summary")}
-          className="py-3 px-6 border border-purple-600 text-purple-600 rounded-xl text-lg font-medium hover:bg-purple-50 transition-colors"
+          className="py-3 px-6 border border-brand-600 text-brand-600 rounded-xl text-lg font-medium hover:bg-brand-50 transition-colors"
         >
           Try Again
         </button>
       )}
       <button
         onClick={() => router.push("/")}
-        className="py-3 px-6 bg-purple-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-purple-700 transition-colors"
+        className="py-3 px-6 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-colors"
       >
         Return to Home
       </button>
       {paymentStatus === "success" && (
         <button
-          onClick={() => router.push("/bookings")}
-          className="py-3 px-6 border border-purple-600 text-purple-600 rounded-xl text-lg font-medium hover:bg-purple-50 transition-colors"
+          onClick={() => router.push("/booking/bookings")}
+          className="py-3 px-6 border border-brand-600 text-brand-600 rounded-xl text-lg font-medium hover:bg-brand-50 transition-colors"
         >
           View My Bookings
         </button>
@@ -369,6 +380,7 @@ export default function BookingConfirmation() {
 
   const formatTime = (timeString) => {
     if (!timeString) return "";
+    if (/am|pm/i.test(timeString)) return timeString; // already "8:00 AM"
 
     const [hours, minutes] = timeString.split(":");
     const hour = parseInt(hours, 10);
@@ -396,7 +408,7 @@ export default function BookingConfirmation() {
 
       <div className="min-h-screen bg-gray-50">
         {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-purple-700 to-purple-900 text-white p-3 text-center">
+        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
           <p className="text-sm">Professional Cleaning Services</p>
         </div>
 

@@ -7,7 +7,7 @@ export default function ServiceItem({
 }) {
   return (
     <div className="mb-4 lg:mb-0">
-      <h2 className="text-xl font-bold mb-4 lg:text-2xl text-purple-900">{title}</h2>
+      <h2 className="text-xl font-bold mb-4 lg:text-2xl text-brand-900">{title}</h2>
 
       <div className="flex  bg-white rounded-lg overflow-hidden shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
         <div className="w-1/3 lg:w-2/5">
@@ -20,7 +20,7 @@ export default function ServiceItem({
 
         <div className="w-2/3 lg:w-3/5 p-4">
           <h3 className="font-bold text-black text-lg lg:text-xl">{title}</h3>
-          <p className="text-indigo-600 font-bold lg:text-lg lg:mt-1">
+          <p className="text-brand-600 font-bold lg:text-lg lg:mt-1">
             {price}
           </p>
 
@@ -42,7 +42,7 @@ export default function ServiceItem({
             </span>
           </div>
 
-          <button className="hidden lg:block mt-3 text-sm bg-indigo-600 text-white py-1 px-4 rounded-full hover:bg-indigo-700 transition-colors">
+          <button className="hidden lg:block mt-3 text-sm bg-brand-600 text-white py-1 px-4 rounded-full hover:bg-brand-700 transition-colors">
             Book Now
           </button>
         </div>

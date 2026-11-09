@@ -75,7 +75,7 @@ export default function SupportBotPage() {
         <div className="bg-white p-4 flex items-center shadow-sm">
           <div className="flex items-center">
             <div className="relative w-16 h-16">
-              <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-10 w-10 text-white"
@@ -104,7 +104,7 @@ export default function SupportBotPage() {
             <div key={message.id} className="flex flex-col">
               <div className="flex items-start mb-1">
                 {message.sender === "bot" && (
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center mr-3">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-6 w-6 text-white"
@@ -126,7 +126,7 @@ export default function SupportBotPage() {
               <div
                 className={`max-w-xl rounded-lg p-4 ${
                   message.sender === "user"
-                    ? "bg-blue-600 text-white ml-auto"
+                    ? "bg-brand-600 text-white ml-auto"
                     : "bg-white text-gray-800"
                 }`}
               >
@@ -143,13 +143,13 @@ export default function SupportBotPage() {
             <input
               type="text"
               placeholder="Type a message..."
-              className="flex-1 border rounded-lg px-4 py-2 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border rounded-lg px-4 py-2 mr-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white rounded-lg px-4 py-2 font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="bg-brand-600 text-white rounded-lg px-4 py-2 font-medium hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             >
               Send
             </button>

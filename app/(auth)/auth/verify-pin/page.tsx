@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Ref } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import AuthService from "../../../../services/authService";
+import AuthLogo from "../../AuthLogo";
 
 export default function VerifyPinPage() {
   const [pin, setPin] = useState(["", "", "", ""]);
@@ -156,9 +157,9 @@ export default function VerifyPinPage() {
         className="hidden lg:flex w-1/2 h-screen bg-cover bg-center items-end justify-center relative"
         style={{ backgroundImage: `url('${images[currentSlide]}')` }}
       >
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-brand-950/60" />
         <div className="relative text-center text-white pb-10 px-6 w-full">
-          <h2 className="text-xl lg:text-2xl font-bold mb-3">
+          <h2 className="text-xl lg:text-2xl mb-3 font-semibold tracking-[-0.02em] leading-tight">
             Impeccable Service
           </h2>
           <p className="text-sm lg:text-base opacity-80 mb-4">
@@ -170,7 +171,7 @@ export default function VerifyPinPage() {
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-2 h-2 lg:w-3 lg:h-3 rounded-full ${
-                  index === currentSlide ? "bg-white" : "bg-[#787878]"
+                  index === currentSlide ? "bg-white" : "bg-white/40"
                 }`}
               />
             ))}
@@ -179,26 +180,24 @@ export default function VerifyPinPage() {
       </div>
 
       {/* Right - PIN Form */}
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
+        <AuthLogo />
         <div className="w-full max-w-md p-6">
-          <div className="flex justify-center mb-6">
-            <img src="/klin-logo.png" alt="Logo" className="w-20 h-20" />
-          </div>
 
-          <h1 className="text-2xl font-bold mb-4 text-center text-[#1E1E1E]">
+          <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Verify PIN
           </h1>
 
           {email && (
-            <p className="text-base text-center mb-2 text-[#373737]">
+            <p className="text-base text-center mb-2 text-brand-950">
               Enter the 4-digit PIN sent to{" "}
               <span className="font-medium">{email}</span>
             </p>
           )}
 
-          <p className="text-sm text-center mb-6 text-[#373737B2]">
+          <p className="text-sm text-center mb-6 text-brand-900/70">
             PIN expires in{" "}
-            <span className="font-medium text-[#3310C2]">
+            <span className="font-medium text-brand-600">
               {formatTime(timer)}
             </span>
           </p>
@@ -224,7 +223,7 @@ export default function VerifyPinPage() {
                   onChange={(e) => handlePinChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   disabled={isVerifying || isResending}
-                  className="w-14 h-14 text-center text-xl font-bold border-2 rounded-lg focus:border-[#3310C2] focus:ring-[#3310C2] outline-none text-black disabled:bg-gray-100"
+                  className="w-14 h-14 text-center text-xl font-bold border-2 rounded-lg focus:border-brand-600 focus:ring-brand-600 outline-none text-brand-950 disabled:bg-gray-100"
                   required
                 />
               ))}
@@ -232,7 +231,7 @@ export default function VerifyPinPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#3310C2] text-white py-3 rounded-lg mb-4 flex items-center justify-center disabled:bg-[#3310C2]/50"
+              className="w-full bg-brand-600 text-white py-3 rounded-lg mb-4 flex items-center justify-center disabled:bg-brand-600/50"
               disabled={isVerifying || isResending}
             >
               {isVerifying ? (
@@ -252,8 +251,8 @@ export default function VerifyPinPage() {
               disabled={timer > 0 || isVerifying || isResending}
               className={`text-sm font-medium ${
                 timer > 0 || isVerifying || isResending
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-[#3310C2]"
+                  ? "text-brand-900/50 cursor-not-allowed"
+                  : "text-brand-600"
               }`}
             >
               Resend PIN

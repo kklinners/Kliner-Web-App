@@ -17,6 +17,105 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 500; /* no thin "regular" text anywhere */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Form controls don't inherit fonts by default in every browser */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+/* Landing page anchor links */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* logo.png is a single-colour mark: use it as a mask so it takes any text colour */
+.logo-mask {
+  display: block;
+  background-color: currentColor;
+  -webkit-mask: url(/logo.png) center / contain no-repeat;
+  mask: url(/logo.png) center / contain no-repeat;
+}
+
+/* ---------- Smooth form controls ---------- */
+@layer base {
+  /* Remove the grey/blue flash on tap (mobile Safari/Chrome) */
+  input,
+  textarea,
+  select,
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  /* Replace the browser's default focus outline with a soft brand ring */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #3310c2;
+    box-shadow: 0 0 0 3px rgba(51, 16, 194, 0.15);
+  }
+
+  /* Checkboxes/radios: no ring box, just brand colour */
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: #3310c2;
+  }
+  input[type="checkbox"]:focus,
+  input[type="radio"]:focus {
+    box-shadow: none;
+  }
+
+  /* Buttons: smooth hover/press, no outline on mouse click */
+  button,
+  [role="button"] {
+    transition: background-color 0.2s ease, color 0.2s ease,
+      border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease,
+      opacity 0.2s ease;
+  }
+  button:focus {
+    outline: none;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  /* Keep a visible ring for keyboard users only (accessibility) */
+  button:focus-visible,
+  a:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(51, 16, 194, 0.35);
+  }
+
+  /* Stop Chrome autofill painting inputs yellow/blue */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000;
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
 import AuthService from "../../../../services/authService";
+import AuthLogo from "../../AuthLogo";
 
 export default function CreateNewPasswordPage() {
   const router = useRouter();
@@ -105,9 +106,9 @@ export default function CreateNewPasswordPage() {
         className="hidden lg:flex w-1/2 h-screen bg-cover bg-center items-end justify-center relative transition-all duration-1000"
         style={{ backgroundImage: `url('${images[currentSlide]}')` }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-brand-950/60"></div>
         <div className="relative text-center text-white pb-10 px-6 w-full">
-          <h2 className="text-xl lg:text-2xl font-bold mb-3">
+          <h2 className="text-xl lg:text-2xl mb-3 font-semibold tracking-[-0.02em] leading-tight">
             Impeccable Service
           </h2>
           <p className="text-sm lg:text-base opacity-80 mb-4">
@@ -119,7 +120,7 @@ export default function CreateNewPasswordPage() {
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-2 h-2 lg:w-3 lg:h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "bg-white" : "bg-[#787878]"
+                  index === currentSlide ? "bg-white" : "bg-white/40"
                 }`}
               ></button>
             ))}
@@ -128,20 +129,14 @@ export default function CreateNewPasswordPage() {
       </div>
 
       {/* Right Side with Form */}
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
+        <AuthLogo />
         <div className="w-full max-w-md p-6">
-          <div className="flex justify-center mb-6">
-            <img
-              src="/klin-logo.png"
-              alt="Logo"
-              className="w-16 h-16 sm:w-24 sm:h-24"
-            />
-          </div>
 
-          <h1 className="text-2xl font-bold mb-4 text-center text-[#1E1E1E]">
+          <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Create New Password
           </h1>
-          <p className="text-base text-center mb-6 text-[#373737B2]">
+          <p className="text-base text-center mb-6 text-brand-900/70">
             Your new password must be different from previously used passwords
           </p>
 
@@ -160,7 +155,7 @@ export default function CreateNewPasswordPage() {
                 onChange={handleInputChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-4 py-3 border text-black rounded-lg focus:border-[#3310C2] focus:ring-[#3310C2] outline-none"
+                className="w-full px-4 py-3 border text-brand-950 rounded-lg focus:border-brand-600 focus:ring-brand-600 outline-none"
                 placeholder="New Password"
               />
               <button
@@ -172,9 +167,9 @@ export default function CreateNewPasswordPage() {
                 disabled={isSubmitting}
               >
                 {showPassword.new ? (
-                  <EyeOff className="text-gray-500 w-5 h-5" />
+                  <EyeOff className="text-brand-900/70 w-5 h-5" />
                 ) : (
-                  <Eye className="text-gray-500 w-5 h-5" />
+                  <Eye className="text-brand-900/70 w-5 h-5" />
                 )}
               </button>
             </div>
@@ -187,7 +182,7 @@ export default function CreateNewPasswordPage() {
                 onChange={handleInputChange}
                 required
                 disabled={isSubmitting}
-                className="w-full px-4 py-3 border text-black rounded-lg focus:border-[#3310C2] focus:ring-[#3310C2] outline-none"
+                className="w-full px-4 py-3 border text-brand-950 rounded-lg focus:border-brand-600 focus:ring-brand-600 outline-none"
                 placeholder="Confirm Password"
               />
               <button
@@ -202,16 +197,16 @@ export default function CreateNewPasswordPage() {
                 disabled={isSubmitting}
               >
                 {showPassword.confirm ? (
-                  <EyeOff className="text-gray-500 w-5 h-5" />
+                  <EyeOff className="text-brand-900/70 w-5 h-5" />
                 ) : (
-                  <Eye className="text-gray-500 w-5 h-5" />
+                  <Eye className="text-brand-900/70 w-5 h-5" />
                 )}
               </button>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#3310C2] text-white text-lg py-3 rounded-lg transition-colors hover:bg-[#3310C2]/90 disabled:bg-[#3310C2]/50 flex items-center justify-center"
+              className="w-full bg-brand-600 text-white text-lg py-3 rounded-lg transition-colors hover:bg-brand-600/90 disabled:bg-brand-600/50 flex items-center justify-center"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -225,7 +220,7 @@ export default function CreateNewPasswordPage() {
             </button>
           </form>
 
-          <p className="text-sm text-[#373737B2] mt-4 text-center">
+          <p className="text-sm text-brand-900/70 mt-4 text-center">
             Password must be at least 8 characters long
           </p>
         </div>
@@ -233,22 +228,22 @@ export default function CreateNewPasswordPage() {
 
       {/* Enhanced Success Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-brand-950/60 z-50">
           <div className="bg-white p-8 rounded-xl shadow-xl max-w-sm w-full mx-4 animate-fade-in">
             <div className="flex flex-col items-center text-center">
               <div className="mb-4">
                 <CheckCircle2 className="w-16 h-16 text-green-500" />
               </div>
-              <h2 className="text-2xl font-bold text-[#1E1E1E] mb-2">
+              <h2 className="text-2xl text-brand-950 mb-2 font-semibold tracking-[-0.02em] leading-tight">
                 Password Updated!
               </h2>
-              <p className="text-[#373737B2] mb-6">
+              <p className="text-brand-900/70 mb-6">
                 Your password has been successfully updated. You can now sign in
                 with your new password.
               </p>
               <button
                 onClick={handleModalClose}
-                className="w-full bg-[#3310C2] text-white py-3 rounded-lg hover:bg-[#3310C2]/90 transition-colors"
+                className="w-full bg-brand-600 text-white py-3 rounded-lg hover:bg-brand-600/90 transition-colors"
               >
                 Continue to Sign In
               </button>

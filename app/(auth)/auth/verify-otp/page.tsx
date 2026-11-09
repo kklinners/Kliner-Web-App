@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthService from "../../../../services/authService";
+import AuthLogo from "../../AuthLogo";
 export default function VerifyEmailPage() {
   const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(300);
@@ -144,29 +145,27 @@ export default function VerifyEmailPage() {
         className="hidden lg:flex w-1/2 h-screen bg-cover bg-center items-end justify-center relative transition-all duration-1000"
         style={{ backgroundImage: `url('${images[currentSlide]}')` }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-brand-950/60"></div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
+        <AuthLogo />
         <div className="w-full max-w-md p-6">
-          <div className="flex justify-center mb-6">
-            <img src="/klin-logo.png" alt="Logo" className="w-20 h-20" />
-          </div>
 
-          <h1 className="text-2xl font-bold mb-4 text-center text-[#1E1E1E]">
+          <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Verify Your Email
           </h1>
 
           {email && (
-            <p className="text-base text-center mb-2 text-[#373737]">
+            <p className="text-base text-center mb-2 text-brand-950">
               Please enter the 4-digit code sent to{" "}
               <span className="font-medium">{email}</span>
             </p>
           )}
 
-          <p className="text-sm text-center mb-6 text-[#373737B2]">
+          <p className="text-sm text-center mb-6 text-brand-900/70">
             Code expires in{" "}
-            <span className="font-medium text-[#3310C2]">
+            <span className="font-medium text-brand-600">
               {formatTime(timer)}
             </span>
           </p>
@@ -188,7 +187,7 @@ export default function VerifyEmailPage() {
                   value={digit}
                   onChange={(e) => handleInputChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-14 h-14 text-center text-black text-xl border-2 rounded-lg focus:border-blue-500 focus:ring-blue-500 outline-none"
+                  className="w-14 h-14 text-center text-brand-950 text-xl border-2 rounded-lg focus:border-brand-600 focus:ring-brand-500 outline-none"
                   disabled={isVerifying}
                   required
                 />
@@ -197,7 +196,7 @@ export default function VerifyEmailPage() {
 
             <button
               type="submit"
-              className="w-3/4 bg-[#3310C2] border border-[[#3310C2]] text-lg text-[#ffff] py-2 rounded-lg mx-auto block mb-4 flex items-center justify-center"
+              className="w-3/4 bg-brand-600 border border-[brand-600] text-lg text-white py-2 rounded-lg mx-auto block mb-4 flex items-center justify-center"
               disabled={isVerifying}
             >
               {isVerifying ? (
@@ -217,8 +216,8 @@ export default function VerifyEmailPage() {
               disabled={timer > 0 || isResending}
               className={`text-sm font-medium ${
                 timer > 0 || isResending
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-[#3310C2] hover:text-[#3310C2]/80"
+                  ? "text-brand-900/50 cursor-not-allowed"
+                  : "text-brand-600 hover:text-brand-600/80"
               }`}
             >
               {isResending
@@ -232,7 +231,7 @@ export default function VerifyEmailPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-brand-950/60 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
             <div className="mb-4 text-green-500">
               <svg
@@ -250,13 +249,13 @@ export default function VerifyEmailPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold mb-2 text-[#8027FF]">Success!</h3>
-            <p className="mb-4 text-gray-700">
+            <h3 className="text-xl mb-2 text-brand-600 font-semibold tracking-[-0.02em] leading-tight">Success!</h3>
+            <p className="mb-4 text-brand-900/70">
               Your email has been verified successfully!
             </p>
             <button
               onClick={handleCloseModal}
-              className="bg-[#3310C2] text-white px-4 py-2 rounded-lg hover:bg-[#3310C2]/90 transition"
+              className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-600/90 transition"
             >
               Continue to Login
             </button>

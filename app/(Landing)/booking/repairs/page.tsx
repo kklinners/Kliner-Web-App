@@ -210,7 +210,30 @@ export default function RepairsPage() {
         })
       );
 
-      // Navigate to the next step
+      const typeTitle =
+        repairTypes.find((t) => t.id === repairType)?.title || repairType;
+      const urgencyTitle =
+        urgencyLevels.find((u) => u.id === urgency)?.title || urgency;
+      localStorage.setItem(
+        "pendingBooking",
+        JSON.stringify({
+          serviceType: "repairs",
+          serviceName: "Repair Service",
+          serviceCategory: `${typeTitle} Repair`,
+          serviceData: {
+            repairType,
+            urgency,
+            description,
+            photosCount: uploadedPhotos.length,
+          },
+          details: [
+            { label: "Urgency", value: urgencyTitle },
+            ...(description ? [{ label: "Description", value: description }] : []),
+          ],
+        })
+      );
+      localStorage.removeItem("bookingSchedule");
+
       router.push("/booking-summary");
     }
   };
@@ -235,7 +258,7 @@ export default function RepairsPage() {
 
       <div className="min-h-screen bg-gray-50">
         {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-3 text-center">
+        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
           <p className="text-sm">Professional Repair Services</p>
         </div>
 
@@ -275,7 +298,7 @@ export default function RepairsPage() {
           {/* Repair type selection */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -313,8 +336,8 @@ export default function RepairsPage() {
                   key={type.id}
                   className={`p-4 rounded-xl flex items-start border-2 transition-all duration-200 cursor-pointer ${
                     repairType === type.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-blue-300"
+                      ? "border-brand-500 bg-brand-50"
+                      : "border-gray-200 hover:border-brand-300"
                   }`}
                   onClick={() => setRepairType(type.id)}
                 >
@@ -322,12 +345,12 @@ export default function RepairsPage() {
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         repairType === type.id
-                          ? "border-blue-600"
+                          ? "border-brand-600"
                           : "border-gray-300"
                       }`}
                     >
                       {repairType === type.id && (
-                        <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                        <div className="w-3 h-3 rounded-full bg-brand-600"></div>
                       )}
                     </div>
                   </div>
@@ -336,7 +359,7 @@ export default function RepairsPage() {
                       <div
                         className={`w-8 h-8 rounded-full ${
                           repairType === type.id
-                            ? "bg-blue-200 text-blue-700"
+                            ? "bg-brand-200 text-brand-700"
                             : "bg-gray-100 text-gray-600"
                         } flex items-center justify-center mr-2`}
                       >
@@ -358,7 +381,7 @@ export default function RepairsPage() {
           {/* Urgency selection */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -390,8 +413,8 @@ export default function RepairsPage() {
                   key={level.id}
                   className={`p-4 rounded-xl flex items-center justify-between border-2 transition-all duration-200 cursor-pointer ${
                     urgency === level.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-blue-300"
+                      ? "border-brand-500 bg-brand-50"
+                      : "border-gray-200 hover:border-brand-300"
                   }`}
                   onClick={() => setUrgency(level.id)}
                 >
@@ -399,12 +422,12 @@ export default function RepairsPage() {
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 ${
                         urgency === level.id
-                          ? "border-blue-600"
+                          ? "border-brand-600"
                           : "border-gray-300"
                       }`}
                     >
                       {urgency === level.id && (
-                        <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                        <div className="w-3 h-3 rounded-full bg-brand-600"></div>
                       )}
                     </div>
                     <div>
@@ -416,7 +439,7 @@ export default function RepairsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-base font-medium text-blue-600">
+                  <div className="text-base font-medium text-brand-600">
                     {level.price}
                   </div>
                 </div>
@@ -427,7 +450,7 @@ export default function RepairsPage() {
           {/* Description and photos */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -464,7 +487,7 @@ export default function RepairsPage() {
               <textarea
                 id="description"
                 rows={4}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-brand-500 focus:ring-brand-500 focus:outline-none"
                 placeholder="Please describe what needs to be repaired..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -476,7 +499,7 @@ export default function RepairsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Photos (Optional)
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-all">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-brand-400 transition-all">
                 <input
                   type="file"
                   multiple
@@ -560,14 +583,14 @@ export default function RepairsPage() {
           </div>
 
           {/* Service guarantee */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border-l-4 border-blue-500">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border-l-4 border-brand-500">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Our Repair Guarantee
             </h3>
             <div className="space-y-2">
               <div className="flex items-start">
                 <svg
-                  className="h-5 w-5 text-blue-500 mr-2 mt-0.5"
+                  className="h-5 w-5 text-brand-500 mr-2 mt-0.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -585,7 +608,7 @@ export default function RepairsPage() {
               </div>
               <div className="flex items-start">
                 <svg
-                  className="h-5 w-5 text-blue-500 mr-2 mt-0.5"
+                  className="h-5 w-5 text-brand-500 mr-2 mt-0.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -603,7 +626,7 @@ export default function RepairsPage() {
               </div>
               <div className="flex items-start">
                 <svg
-                  className="h-5 w-5 text-blue-500 mr-2 mt-0.5"
+                  className="h-5 w-5 text-brand-500 mr-2 mt-0.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -621,7 +644,7 @@ export default function RepairsPage() {
               </div>
               <div className="flex items-start">
                 <svg
-                  className="h-5 w-5 text-blue-500 mr-2 mt-0.5"
+                  className="h-5 w-5 text-brand-500 mr-2 mt-0.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -650,7 +673,7 @@ export default function RepairsPage() {
           >
             <button
               onClick={handleContinue}
-              className={`w-full py-4 bg-blue-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-blue-700 transition-all duration-300 ${
+              className={`w-full py-4 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-all duration-300 ${
                 !isReadyToContinue ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={!isReadyToContinue}

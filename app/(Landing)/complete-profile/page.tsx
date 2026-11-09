@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { UserIcon, PencilIcon } from "../../components/icons/KlinIcons";
 
 export default function UserProfileForm() {
   const router = useRouter();
@@ -379,8 +380,8 @@ export default function UserProfileForm() {
                 className="rounded-full object-cover w-24 h-24 border-2 border-gray-300"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-400">
-                <span className="text-4xl">👤</span>
+              <div className="w-24 h-24 rounded-full bg-brand-100 flex items-center justify-center">
+                <UserIcon size={52} />
               </div>
             )}
             <input
@@ -390,8 +391,8 @@ export default function UserProfileForm() {
               onChange={handleImageUpload}
               disabled={loading || imageLoading}
             />
-            <div className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full">
-              ✎
+            <div className="absolute bottom-0 right-0 bg-brand-600 text-white p-1.5 rounded-full border-2 border-white">
+              <PencilIcon size={14} />
             </div>
           </label>
           <p className="text-xs text-gray-500 mt-2">Max size: 5MB</p>
@@ -405,7 +406,7 @@ export default function UserProfileForm() {
               className={`mt-2 px-4 py-1 text-sm rounded-md transition duration-200 ${
                 imageLoading
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-brand-600 hover:bg-brand-700"
               } text-white`}
             >
               {imageLoading ? "Uploading..." : "Save Image"}
@@ -428,7 +429,7 @@ export default function UserProfileForm() {
               required
               placeholder="First Name"
               disabled={loading}
-              className="w-full p-2 border text-black rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+              className="w-full p-2 border text-black rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
             />
 
             <input
@@ -439,7 +440,7 @@ export default function UserProfileForm() {
               required
               placeholder="Last Name"
               disabled={loading}
-              className="w-full p-2 border text-black rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+              className="w-full p-2 border text-black rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
             />
           </div>
 
@@ -451,7 +452,7 @@ export default function UserProfileForm() {
             required
             placeholder="Username"
             disabled={loading}
-            className="w-full p-2 border text-black rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+            className="w-full p-2 border text-black rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
           />
 
           <input
@@ -460,7 +461,7 @@ export default function UserProfileForm() {
             value={formData.dateOfBirth}
             onChange={handleChange}
             disabled={loading}
-            className="w-full p-2 text-black border rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+            className="w-full p-2 text-black border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
           />
 
           <input
@@ -478,7 +479,7 @@ export default function UserProfileForm() {
             value={formData.mobile}
             onChange={handlePhoneChange}
             disabled={loading}
-            inputClass="!w-full !p-2 !border !rounded-md focus:ring focus:ring-purple-300 !text-black"
+            inputClass="!w-full !p-2 !border !rounded-md focus:ring focus:ring-brand-300 !text-black"
           />
 
           <input
@@ -489,7 +490,7 @@ export default function UserProfileForm() {
             required
             placeholder="Address"
             disabled={loading}
-            className="w-full text-black p-2 border rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+            className="w-full text-black p-2 border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
           />
 
           {/* City and State Row */}
@@ -503,7 +504,7 @@ export default function UserProfileForm() {
                 placeholder="Enter your city"
                 disabled={loading}
                 list="cities-list"
-                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50"
+                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
               />
               <datalist id="cities-list">
                 {nigerianCities.map((city) => (
@@ -518,7 +519,7 @@ export default function UserProfileForm() {
                 value={formData.state}
                 onChange={handleChange}
                 disabled={loading}
-                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-purple-300 disabled:opacity-50 appearance-none bg-white"
+                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50 appearance-none bg-white"
               >
                 <option value="">Select State</option>
                 {nigerianStates.map((state) => (
@@ -548,8 +549,8 @@ export default function UserProfileForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-purple-600 text-white text-lg py-2 rounded-md transition duration-200 ${
-              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-purple-700"
+            className={`w-full bg-brand-600 text-white text-lg py-2 rounded-md transition duration-200 ${
+              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-brand-700"
             }`}
           >
             {loading ? "Updating Profile..." : "Save Profile Data"}

@@ -109,7 +109,7 @@ export default function SupportBotMobile() {
 
               <div className="flex items-center w-full">
                 <div className="relative w-14 h-14">
-                  <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-brand-600 flex items-center justify-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-8 w-8 text-white"
@@ -139,7 +139,7 @@ export default function SupportBotMobile() {
                   {message.sender === "bot" ? (
                     <div className="flex flex-col">
                       <div className="flex items-center mb-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2">
+                        <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center mr-2">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5 text-white"
@@ -168,7 +168,7 @@ export default function SupportBotMobile() {
                           Customer
                         </span>
                       </div>
-                      <div className="bg-blue-600 rounded-lg p-3 max-w-[85%] shadow-sm text-white">
+                      <div className="bg-brand-600 rounded-lg p-3 max-w-[85%] shadow-sm text-white">
                         <p>{message.text}</p>
                       </div>
                     </div>
@@ -191,13 +191,13 @@ export default function SupportBotMobile() {
                 <input
                   type="text"
                   placeholder="Type a message..."
-                  className="flex-1 border rounded-full px-4 py-3 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border rounded-full px-4 py-3 mr-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-blue-700"
+                  className="bg-brand-600 text-white rounded-full w-12 h-12 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500 hover:bg-brand-700"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
