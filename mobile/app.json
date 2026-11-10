@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Kliner",
+    "slug": "kliner-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "kliner",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d4f4f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kliner.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d4f4f"
+      },
+      "package": "com.kliner.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "http://localhost:3002"
+    }
+  }
+}
