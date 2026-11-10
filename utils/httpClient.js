@@ -36,9 +36,15 @@ httpClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // Handle token expiration (401 Unauthorized)
+    // Only an expired login counts. A wrong code or password on the auth screens also
+    // answers 401 and must show its message, not throw the person out.
+    const hadSession = Boolean(originalRequest?.headers?.Authorization);
+    const isAuthScreenCall = String(originalRequest?.url || "").includes("/api/v1/auth/");
     if (
       error.response &&
       error.response.status === 401 &&
+      hadSession &&
+      !isAuthScreenCall &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;

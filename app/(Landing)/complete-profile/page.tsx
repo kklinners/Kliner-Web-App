@@ -1,4 +1,5 @@
 "use client";
+import Select from "../../components/Select";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import PhoneInput from "react-phone-input-2";
@@ -496,52 +497,32 @@ export default function UserProfileForm() {
           {/* City and State Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="relative">
-              <input
-                type="text"
+              <Select
                 name="city"
                 value={formData.city}
-                onChange={handleChange}
-                placeholder="Enter your city"
+                onChange={(v) => handleChange({ target: { name: "city", value: v } })}
                 disabled={loading}
-                list="cities-list"
-                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50"
+                options={nigerianCities}
+                placeholder="Enter your city"
+                title="City"
+                searchable
+                allowCustom
+                triggerClassName="w-full p-2 text-black border rounded-md focus-visible:ring focus-visible:ring-brand-300"
               />
-              <datalist id="cities-list">
-                {nigerianCities.map((city) => (
-                  <option key={city} value={city} />
-                ))}
-              </datalist>
             </div>
 
             <div className="relative">
-              <select
+              <Select
                 name="state"
                 value={formData.state}
-                onChange={handleChange}
+                onChange={(v) => handleChange({ target: { name: "state", value: v } })}
                 disabled={loading}
-                className="w-full p-2 text-black border rounded-md focus:ring focus:ring-brand-300 disabled:opacity-50 appearance-none bg-white"
-              >
-                <option value="">Select State</option>
-                {nigerianStates.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
+                options={nigerianStates}
+                placeholder="Select State"
+                title="State"
+                searchable
+                triggerClassName="w-full p-2 text-black border rounded-md focus-visible:ring focus-visible:ring-brand-300"
+              />
             </div>
           </div>
 

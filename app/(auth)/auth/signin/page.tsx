@@ -1,8 +1,9 @@
 "use client";
+import KlinerLoader from "../../../components/KlinerLoader";
 import { resolvePostLoginPath } from "../../../../utils/postAuthRedirect";
 import { useState, useEffect } from "react";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
@@ -132,7 +133,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-[100vh] w-screen">
+    <div className="flex min-h-[100vh] w-screen">
       {/* Toast Container */}
       <Toaster />
 
@@ -169,16 +170,12 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-4 sm:p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-4 sm:p-6">
+          <AuthLogo />
           <h1 className="text-xl sm:text-2xl mb-4 sm:mb-6 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Welcome to Klinners.co
           </h1>
-          <p className="text-sm sm:text-base text-center mb-4 text-brand-900/70">
-            Continue with Facebook or enter your account
-          </p>
 
           <div className="space-y-2">
             <button
@@ -274,7 +271,7 @@ export default function LoginPage() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Logging in...
                 </>
               ) : (

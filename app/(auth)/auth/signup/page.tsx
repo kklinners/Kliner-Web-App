@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import KlinerLoader from "../../../components/KlinerLoader";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -96,7 +97,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex h-[100vh] w-screen">
+    <div className="flex min-h-[100vh] w-screen">
       {/* Left Side - Image Slider */}
       <div
         className="hidden lg:flex w-1/2 h-screen bg-cover bg-center items-end justify-center relative transition-all duration-1000"
@@ -125,10 +126,9 @@ export default function SignUpPage() {
       </div>
 
       {/* Right Side - Signup Form */}
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-4 sm:p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-4 sm:p-6">
+          <AuthLogo />
           <h1 className="text-xl sm:text-2xl mb-4 sm:mb-6 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Create Your Account
           </h1>
@@ -253,7 +253,7 @@ export default function SignUpPage() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Creating Account...
                 </>
               ) : (

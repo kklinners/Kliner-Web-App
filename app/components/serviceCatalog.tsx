@@ -17,8 +17,6 @@ export const SERVICES = [
     Icon: CleaningIcon,
     color: "bg-brand-100",
     price: fromPrice("house_cleaning"),
-    rating: 4.7,
-    reviews: 12500,
     description:
       "Professional home cleaning services for any size of residence.",
     mainImage: "/images/cleaning-service.jpg",
@@ -30,8 +28,6 @@ export const SERVICES = [
     Icon: LaundryIcon,
     color: "bg-amber-50",
     price: fromPrice("laundry"),
-    rating: 4.5,
-    reviews: 8000,
     description:
       "Wash, dry, and fold laundry services with eco-friendly options available.",
     mainImage: "/images/laundry-service.jpg",
@@ -43,8 +39,6 @@ export const SERVICES = [
     Icon: MovingIcon,
     color: "bg-cyan-50",
     price: fromPrice("move_out"),
-    rating: 4.6,
-    reviews: 5400,
     description:
       "Professional moving services for homes and businesses of all sizes.",
     mainImage: "/images/moving-service.jpg",
@@ -61,8 +55,6 @@ export const SERVICES = [
     Icon: GardeningIcon,
     color: "bg-green-50",
     price: fromPrice("gardening"),
-    rating: 4.4,
-    reviews: 3200,
     description: "Garden maintenance, lawn care, and plant care services.",
     mainImage: "/images/gardening-service.jpg",
     images: [
@@ -78,8 +70,6 @@ export const SERVICES = [
     Icon: RepairsIcon,
     color: "bg-rose-50",
     price: fromPrice("repairs"),
-    rating: 4.8,
-    reviews: 7800,
     description:
       "Household repairs and maintenance for appliances, furniture, and more.",
     mainImage: "/images/repairs-service.jpg",

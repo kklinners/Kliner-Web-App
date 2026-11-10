@@ -54,6 +54,7 @@ export const JOB_STATUS = {
   assigned: ["Offered", "sky"],
   accepted: [VENDORS_ENABLED ? "Accepted" : "Team assigned", "brand"],
   in_progress: ["In progress", "brand"],
+  completion_requested: ["Awaiting approval", "amber"],
   completed: ["Completed", "green"],
   cancelled: ["Cancelled", "red"],
 };

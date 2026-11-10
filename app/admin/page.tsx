@@ -14,12 +14,19 @@ import {
   Circle,
   ArrowRight,
   MapPin,
+  Megaphone,
+  Users,
 } from "lucide-react";
 import { httpClient } from "../../utils/httpClient";
 import { isAuthenticated } from "../../utils/tokenService";
 import { setPostAuthRedirect } from "../../utils/postAuthRedirect";
 import { SERVICE_TYPE_LABELS, LAUNCH_DISTRICT } from "../../utils/serviceAreas";
 import { VENDORS_ENABLED } from "../../utils/features";
+import { teamJobWhatsAppMessage, teamWhatsAppLink, fieldJobUrl } from "../../utils/teamField";
+import PromotionsSection from "./PromotionsSection";
+import EmployeesSection from "./EmployeesSection";
+import JobProgress from "../components/JobProgress";
+import { formatDuration } from "../../utils/jobProgress";
 import {
   Shell,
   Panel,
@@ -83,21 +90,24 @@ export default function AdminPage() {
   const [openPartnerId, setOpenPartnerId] = useState(null);
   const [openJobId, setOpenJobId] = useState(null);
   const [user, setUser] = useState({ name: "", email: "" });
+  const [employees, setEmployees] = useState([]);
 
   const load = useCallback(async () => {
     try {
       const none = Promise.resolve({ data: { data: [] } });
-      const [o, p, u, a, c, pay] = await Promise.all([
+      const [o, p, u, a, c, pay, em] = await Promise.all([
         httpClient.get("/api/v1/partners/admin/overview"),
         VENDORS_ENABLED ? httpClient.get("/api/v1/partners") : none,
         httpClient.get("/api/v1/partners/admin/jobs?view=unassigned"),
         httpClient.get("/api/v1/partners/admin/jobs?view=active"),
         httpClient.get("/api/v1/partners/admin/jobs?view=completed"),
         VENDORS_ENABLED ? httpClient.get("/api/v1/partners/admin/jobs?view=payouts") : none,
+        httpClient.get("/api/v1/employees").catch(() => ({ data: { data: [] } })),
       ]);
       setOverview(o.data.data);
       setPartners(p.data.data || []);
       setJobs({ unassigned: u.data.data, active: a.data.data, completed: c.data.data, payouts: pay.data.data });
+      setEmployees(em.data.data || []);
       setError("");
     } catch (err) {
       const msg = apiError(err);
@@ -143,6 +153,8 @@ export default function AdminPage() {
     VENDORS_ENABLED && { id: "applications", label: "Applications", short: "Apply", icon: FileCheck2, count: pending.length },
     VENDORS_ENABLED && { id: "partners", label: "Partners", icon: Building2 },
     { id: "jobs", label: "Jobs", icon: Briefcase, count: jobs.unassigned.length },
+    { id: "promotions", label: "Promotions", short: "Offers", icon: Megaphone },
+    { id: "employees", label: "Employees", short: "Staff", icon: Users },
     VENDORS_ENABLED && { id: "payouts", label: "Payouts", short: "Pay", icon: Wallet, count: jobs.payouts.length },
   ].filter(Boolean);
 
@@ -151,6 +163,8 @@ export default function AdminPage() {
     applications: ["Applications", "Review and verify new partner companies"],
     partners: ["Partners", "Companies fulfilling Kliner bookings"],
     jobs: ["Jobs", "Paid bookings and the teams handling them"],
+    promotions: ["Promotions", "Banners on customers' home screen"],
+    employees: ["Employees", "Roster, BVN, IDs, and photos for field teams"],
     payouts: ["Payouts", "Money owed to partners for completed jobs"],
   };
 
@@ -194,6 +208,8 @@ export default function AdminPage() {
             <PartnersTable rows={partners.filter((p) => p.status !== "pending")} onOpen={setOpenPartnerId} emptyText="No verified partners yet. Approve an application to get started." />
           )}
           {section === "jobs" && <JobsSection jobs={jobs} onOpen={setOpenJobId} />}
+          {section === "promotions" && <PromotionsSection />}
+          {section === "employees" && <EmployeesSection />}
           {section === "payouts" && <PayoutsSection rows={jobs.payouts} paid={overview?.money?.payoutsPaid} onOpen={setOpenJobId} />}
         </>
       )}
@@ -213,13 +229,56 @@ export default function AdminPage() {
       <JobDrawer
         job={openJob}
         partners={partners}
+        employees={employees}
         onClose={() => setOpenJobId(null)}
         busy={busy}
         onAssign={(partnerId) => run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/assign`, { partnerId }))}
-        onTeam={(name, phone) => run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/team`, { name, phone }))}
-        onProgress={(status) => run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/progress`, { status }))}
+        onTeam={async (name, phone, employeeIds) => {
+          setBusy(true);
+          setError("");
+          try {
+            const { data } = await httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/team`, {
+              name,
+              phone,
+              employeeIds,
+            });
+            await load();
+            const token = data?.data?.fieldToken;
+            const job = data?.data;
+            if (token && phone) {
+              const url = fieldJobUrl(token, window.location.origin);
+              const wa = teamWhatsAppLink(
+                phone,
+                teamJobWhatsAppMessage({
+                  teamName: name,
+                  serviceCategory: job?.serviceCategory,
+                  bookingDate: job?.bookingDate,
+                  bookingTime: job?.bookingTime,
+                  location: job?.location,
+                  fieldUrl: url,
+                  accessNotes: job?.customerSecurity?.accessNotes || data?.data?.customerSecurity?.accessNotes,
+                })
+              );
+              if (wa) window.open(wa, "_blank", "noopener,noreferrer");
+            }
+            return true;
+          } catch (err) {
+            setError(apiError(err));
+            return false;
+          } finally {
+            setBusy(false);
+          }
+        }}
+        onProgress={(status, expectedMinutes) =>
+          run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/progress`, { status, ...(expectedMinutes ? { expectedMinutes } : {}) }))
+        }
+        onExpected={(expectedMinutes) => run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/expected`, { expectedMinutes }))}
         onPayout={(transferReference) =>
           run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/payout`, { transferReference }))
+        }
+        onApproveCompletion={() => run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/approve-completion`))}
+        onRejectCompletion={(notes) =>
+          run(() => httpClient.post(`/api/v1/partners/admin/jobs/${openJob.id}/reject-completion`, { notes }))
         }
       />
     </Shell>
@@ -234,6 +293,7 @@ function Overview({ data, pending, jobs, go, openJob }) {
     ...(VENDORS_ENABLED ? [["assigned", "Offered", "bg-sky-400"]] : []),
     ["accepted", VENDORS_ENABLED ? "Accepted" : "Team assigned", "bg-brand-400"],
     ["in_progress", "In progress", "bg-brand-600"],
+    ["completion_requested", "Awaiting approval", "bg-amber-500"],
     ["completed", "Completed", "bg-emerald-500"],
   ];
   const totalJobs = pipeline.reduce((s, [k]) => s + (data.jobs[k] || 0), 0);
@@ -275,6 +335,28 @@ function Overview({ data, pending, jobs, go, openJob }) {
                   </span>
                   <ArrowRight size={16} className="ml-auto text-stone-400" />
                 </button>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {data.paymentIssues?.length > 0 && (
+        <Panel title="Payments to review" padded={false}>
+          <p className="px-5 pb-3 text-[13px] text-stone-600">
+            Paystack took money for these bookings, but not the amount we expected, so they are not marked paid. Check the transaction in your Paystack dashboard.
+          </p>
+          <ul className="divide-y divide-stone-100 border-t border-stone-100">
+            {data.paymentIssues.map((p) => (
+              <li key={p.id} className="px-5 py-3">
+                <p className="text-[14px] font-medium text-stone-900">
+                  {p.service}
+                  {p.customer ? ` · ${p.customer}` : ""}
+                </p>
+                <p className="text-[13px] text-amber-800">{p.note}</p>
+                <p className={`text-[12px] text-stone-500 ${mono}`}>
+                  {p.reference} · expected {money(p.expected)}
+                </p>
               </li>
             ))}
           </ul>
@@ -773,18 +855,28 @@ function JobsSection({ jobs, onOpen }) {
   );
 }
 
-function JobDrawer({ job, partners, onClose, busy, onAssign, onPayout, onTeam, onProgress }) {
+function JobDrawer({ job, partners, employees, onClose, busy, onAssign, onPayout, onTeam, onProgress, onExpected, onApproveCompletion, onRejectCompletion }) {
   const [partnerId, setPartnerId] = useState("");
   const [reference, setReference] = useState("");
   const [teamName, setTeamName] = useState("");
   const [teamPhone, setTeamPhone] = useState("");
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
+  const [rejectNote, setRejectNote] = useState("");
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
+    // the expected time starts from what the system estimated for this job
+    const total = job?.expectedMinutes || 0;
+    setHours(String(Math.floor(total / 60)));
+    setMinutes(String(total % 60));
     setPartnerId("");
     setReference("");
     setTeamName(job?.team?.name || "");
     setTeamPhone(job?.team?.phone || "");
-  }, [job?.id, job?.team?.name, job?.team?.phone]);
+    setSelectedEmployeeIds((job?.arrival?.crew || []).map((c) => c.employeeId));
+  }, [job?.id, job?.team?.name, job?.team?.phone, job?.expectedMinutes, job?.arrival?.crew]);
 
   if (!job) return null;
 
@@ -795,13 +887,46 @@ function JobDrawer({ job, partners, onClose, busy, onAssign, onPayout, onTeam, o
     (p) => p.status === "verified" && p.services.includes(job.serviceType) && (!job.area || p.areas.includes(job.area))
   );
   const payoutDue = VENDORS_ENABLED && job.payout?.status === "pending";
-  const teamUnchanged = job.status === "accepted" && teamName.trim() === (job.team?.name || "") && teamPhone.trim() === (job.team?.phone || "");
-  const nextStep = VENDORS_ENABLED ? null : { accepted: ["in_progress", "Mark as started"], in_progress: ["completed", "Mark as completed"] }[job.status];
+  const crewIds = (job?.arrival?.crew || []).map((c) => c.employeeId).sort().join(",");
+  const selectedKey = [...selectedEmployeeIds].sort().join(",");
+  const teamUnchanged =
+    job.status === "accepted" &&
+    teamName.trim() === (job.team?.name || "") &&
+    teamPhone.trim() === (job.team?.phone || "") &&
+    crewIds === selectedKey;
+  const nextStep = VENDORS_ENABLED ? null : { accepted: ["in_progress", "Mark as started"] }[job.status];
+  const awaitingApproval = !VENDORS_ENABLED && job.status === "completion_requested";
+  const fieldLink =
+    typeof window !== "undefined" && job.fieldToken
+      ? `${window.location.origin}/team/${job.fieldToken}`
+      : job.fieldToken
+        ? `/team/${job.fieldToken}`
+        : "";
+
+  const expectedTotal = (Number(hours) || 0) * 60 + (Number(minutes) || 0);
+  const expectedOk = expectedTotal >= 15 && expectedTotal <= 4320;
+  const showTime = !VENDORS_ENABLED && ["accepted", "in_progress"].includes(job.status);
 
   let footer = null;
-  if (nextStep) {
+  if (awaitingApproval) {
     footer = (
-      <Button variant={nextStep[0] === "completed" ? "success" : "primary"} disabled={busy} onClick={() => onProgress(nextStep[0])}>
+      <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <Button variant="success" disabled={busy} onClick={() => onApproveCompletion()}>
+          Approve completion
+        </Button>
+        <Button variant="outline" disabled={busy} onClick={() => onRejectCompletion(rejectNote.trim())}>
+          Send back to team
+        </Button>
+      </div>
+    );
+  } else if (nextStep) {
+    const starting = nextStep[0] === "in_progress";
+    footer = (
+      <Button
+        variant="primary"
+        disabled={busy || (starting && !expectedOk)}
+        onClick={() => onProgress(nextStep[0], starting ? expectedTotal : undefined)}
+      >
         {nextStep[1]}
       </Button>
     );
@@ -847,6 +972,136 @@ function JobDrawer({ job, partners, onClose, busy, onAssign, onPayout, onTeam, o
       }
       footer={footer}
     >
+      {showTime && (
+        <Section title="Expected time">
+          {job.status === "in_progress" && job.timeline?.started && (
+            <div className="mb-4 rounded-lg bg-stone-50 p-4 ring-1 ring-inset ring-stone-200">
+              <JobProgress startedAt={job.timeline.started} expectedMinutes={job.expectedMinutes} compact />
+              <p className="mt-2 text-[12px] text-stone-500">What the customer sees until the team requests completion and you approve it.</p>
+            </div>
+          )}
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="text-[13px] font-medium text-stone-700">
+              Hours
+              <input type="number" min={0} max={72} value={hours} onChange={(e) => setHours(e.target.value)} className="mt-1 h-10 w-24 rounded-lg ring-1 ring-inset ring-stone-300 !border-0 !shadow-none px-3 text-[14px] text-stone-900 outline-none focus:ring-2 focus:ring-brand-500" />
+            </label>
+            <label className="text-[13px] font-medium text-stone-700">
+              Minutes
+              <input type="number" min={0} max={59} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="mt-1 h-10 w-24 rounded-lg ring-1 ring-inset ring-stone-300 !border-0 !shadow-none px-3 text-[14px] text-stone-900 outline-none focus:ring-2 focus:ring-brand-500" />
+            </label>
+            {job.status === "in_progress" && (
+              <Button variant="outline" disabled={busy || !expectedOk || expectedTotal === job.expectedMinutes} onClick={() => onExpected(expectedTotal)}>
+                Update time
+              </Button>
+            )}
+          </div>
+          <p className="mt-2 text-[12px] text-stone-500">
+            {expectedOk ? `Customers see progress move over ${formatDuration(expectedTotal)}.` : "Enter between 15 minutes and 3 days."}
+            {job.status === "accepted" && " Set it before starting the job."}
+          </p>
+        </Section>
+      )}
+
+      {!VENDORS_ENABLED && job.fieldToken && (
+        <Section title="Team field link">
+          <p className="text-[13px] text-stone-600 mb-2">
+            Share this with the assigned team. They can post cleaning updates and request completion here — no login.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              readOnly
+              value={fieldLink}
+              className="h-10 flex-1 rounded-lg ring-1 ring-inset ring-stone-300 !border-0 !shadow-none px-3 text-[13px] text-stone-800 outline-none font-mono"
+            />
+            <Button
+              variant="outline"
+              disabled={!fieldLink}
+              onClick={() => {
+                if (!fieldLink) return;
+                navigator.clipboard?.writeText(fieldLink);
+                setCopiedLink(true);
+                setTimeout(() => setCopiedLink(false), 2000);
+              }}
+            >
+              {copiedLink ? "Copied" : "Copy link"}
+            </Button>
+            {job.team?.phone && (
+              <Button
+                variant="primary"
+                disabled={!fieldLink}
+                onClick={() => {
+                  const wa = teamWhatsAppLink(
+                    job.team.phone,
+                    teamJobWhatsAppMessage({
+                      teamName: job.team.name || "team",
+                      serviceCategory: job.serviceCategory,
+                      bookingDate: job.bookingDate,
+                      bookingTime: job.bookingTime,
+                      location: job.location,
+                      fieldUrl: fieldLink.startsWith("http") ? fieldLink : `${typeof window !== "undefined" ? window.location.origin : ""}${fieldLink}`,
+                      accessNotes: job.customerSecurity?.accessNotes,
+                    })
+                  );
+                  if (wa) window.open(wa, "_blank", "noopener,noreferrer");
+                }}
+              >
+                Send on WhatsApp
+              </Button>
+            )}
+          </div>
+          <p className="text-[12px] text-stone-500 mt-2">
+            WhatsApp includes the field link and rules only — not the visit code. The owner sees the code in their app and shares it at the door.
+          </p>
+        </Section>
+      )}
+
+      {(job.fieldReports?.length > 0 || awaitingApproval) && (
+        <Section title="Cleaning reports">
+          {job.completionRequest?.notes && (
+            <p className="text-[14px] text-stone-800 mb-3 rounded-lg bg-amber-50 px-3 py-2 ring-1 ring-inset ring-amber-200">
+              <span className="font-semibold">Team completion note: </span>
+              {job.completionRequest.notes}
+            </p>
+          )}
+          {awaitingApproval && (
+            <label className="block text-[13px] font-medium text-stone-700 mb-3">
+              Note if sending back to the team (optional)
+              <input
+                value={rejectNote}
+                onChange={(e) => setRejectNote(e.target.value)}
+                placeholder="e.g. Please redo the bathroom"
+                className="mt-1 h-10 w-full rounded-lg ring-1 ring-inset ring-stone-300 !border-0 !shadow-none px-3 text-[14px] text-stone-900 outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </label>
+          )}
+          {job.fieldReports?.length ? (
+            <ol className="space-y-2 max-h-48 overflow-y-auto">
+              {[...(job.fieldReports || [])].reverse().map((r, i) => (
+                <li key={`${r.at}-${i}`} className="rounded-lg bg-stone-50 px-3 py-2 text-[13px]">
+                  {r.reportKind && r.reportKind !== "update" ? (
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-brand-700 mb-0.5">{r.reportKind}</p>
+                  ) : null}
+                  {r.message ? <p className="text-stone-800">{r.message}</p> : null}
+                  {r.photos?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {r.photos.map((src) => (
+                        <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt="Field report" className="h-20 w-20 rounded-md object-cover ring-1 ring-stone-200" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[12px] text-stone-500 mt-0.5">{timeAgo(r.at)}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-[13px] text-stone-500">No field updates yet.</p>
+          )}
+        </Section>
+      )}
+
       {canSetTeam && (
         <Section title={job.status === "accepted" ? "Assigned team" : "Assign a team"}>
           <div className="space-y-2">
@@ -858,13 +1113,113 @@ function JobDrawer({ job, partners, onClose, busy, onAssign, onPayout, onTeam, o
               Phone number
               <input type="tel" value={teamPhone} onChange={(e) => setTeamPhone(e.target.value)} className="mt-1 h-10 w-full rounded-lg ring-1 ring-inset ring-stone-300 !border-0 !shadow-none px-3 text-[14px] text-stone-900 outline-none focus:ring-2 focus:ring-brand-500" />
             </label>
+            <div className="pt-2">
+              <p className="text-[13px] font-medium text-stone-700 mb-2">Crew on this job (from employee roster)</p>
+              {employees.length === 0 ? (
+                <p className="text-[12px] text-amber-800 bg-amber-50 rounded-lg px-3 py-2">Add employees under Admin → Employees first.</p>
+              ) : (
+                <ul className="max-h-40 overflow-y-auto space-y-1.5 rounded-lg ring-1 ring-inset ring-stone-200 p-2">
+                  {employees
+                    .filter((e) => e.status === "active")
+                    .map((e) => {
+                      const on = selectedEmployeeIds.includes(e.employee_id);
+                      return (
+                        <li key={e.employee_id}>
+                          <label className="flex items-center gap-2 text-[13px] cursor-pointer py-1">
+                            <input
+                              type="checkbox"
+                              checked={on}
+                              onChange={() =>
+                                setSelectedEmployeeIds((ids) =>
+                                  on ? ids.filter((id) => id !== e.employee_id) : [...ids, e.employee_id]
+                                )
+                              }
+                            />
+                            <span className="font-medium text-stone-900">{e.fullName}</span>
+                            <span className="text-stone-500 font-mono text-[11px]">{e.bvnMasked}</span>
+                          </label>
+                        </li>
+                      );
+                    })}
+                </ul>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button variant={job.status === "accepted" ? "outline" : "primary"} disabled={busy || !teamName.trim() || !teamPhone.trim() || teamUnchanged} onClick={() => onTeam(teamName.trim(), teamPhone.trim())}>
+              <Button
+                variant={job.status === "accepted" ? "outline" : "primary"}
+                disabled={busy || !teamName.trim() || !teamPhone.trim() || !selectedEmployeeIds.length || teamUnchanged}
+                onClick={() => onTeam(teamName.trim(), teamPhone.trim(), selectedEmployeeIds)}
+              >
                 {job.status === "accepted" ? "Update team" : "Assign team"}
               </Button>
               <span className="text-[13px] text-stone-500">The customer sees this name and number.</span>
             </div>
           </div>
+        </Section>
+      )}
+
+      {job.customerSecurity && (
+        <Section title="Property owner safety">
+          <KV
+            rows={[
+              [
+                "Visit code (owner only)",
+                job.customerSecurity.visitorCode || "Generated when team is assigned",
+              ],
+              ["Access notes", job.customerSecurity.accessNotes || "—"],
+              ["Belongings rule acknowledged", job.customerSecurity.belongingsAcknowledged ? "Yes" : "No"],
+              ["Limited access acknowledged", job.customerSecurity.limitedAccessAcknowledged ? "Yes" : "No"],
+            ]}
+          />
+          {job.customerSecurity.issueReports?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[13px] font-semibold text-rose-800 mb-2">Owner incident reports</p>
+              <ol className="space-y-2 max-h-40 overflow-y-auto">
+                {[...(job.customerSecurity.issueReports || [])].reverse().map((r, i) => (
+                  <li key={`${r.at}-${i}`} className="rounded-lg bg-rose-50 px-3 py-2 text-[13px] ring-1 ring-inset ring-rose-100">
+                    <p className="text-stone-900">{r.message}</p>
+                    {r.photos?.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {r.photos.map((src) => (
+                          <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="block">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={src} alt="Owner report" className="h-16 w-16 rounded-md object-cover ring-1 ring-stone-200" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-[12px] text-stone-500 mt-0.5">{timeAgo(r.at)}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </Section>
+      )}
+
+      {job.arrival?.crew?.length > 0 && (
+        <Section title="Arrival log">
+          <KV
+            rows={[
+              ["Team arrived", job.arrival.arrivedAt ? longDate(job.arrival.arrivedAt) : "Not recorded yet"],
+              ["Presence", `${job.arrival.checkIns?.length || 0} of ${job.arrival.crew.length} confirmed`],
+            ]}
+          />
+          <ul className="mt-3 space-y-2">
+            {job.arrival.crew.map((m) => {
+              const hit = job.arrival.checkIns?.find((c) => c.employeeId === m.employeeId);
+              return (
+                <li key={m.employeeId} className="flex items-center justify-between text-[13px] rounded-lg bg-stone-50 px-3 py-2">
+                  <span className="font-medium text-stone-900">{m.name}</span>
+                  {hit ? (
+                    <span className="text-emerald-700 font-semibold">{longDate(hit.checkedInAt)} ✓</span>
+                  ) : (
+                    <span className="text-amber-700">Awaiting tap-in</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </Section>
       )}
 
@@ -951,7 +1306,9 @@ function JobDrawer({ job, partners, onClose, busy, onAssign, onPayout, onTeam, o
                   ["Booked", job.timeline?.booked],
                   ["Paid", job.timeline?.paid],
                   ["Team assigned", job.timeline?.accepted, job.team?.name],
+                  ["Team arrived", job.arrival?.arrivedAt],
                   ["Work started", job.timeline?.started],
+                  ["Completion requested", job.completionRequest?.requestedAt],
                   ["Completed", job.timeline?.completed],
                 ]
           }

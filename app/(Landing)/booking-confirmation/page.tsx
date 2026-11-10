@@ -1,449 +1,217 @@
-// pages/booking-confirmation.js
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import KlinerLoader from "../../components/KlinerLoader";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Head from "next/head";
-import Cookies from "js-cookie";
 import { formatNaira } from "../../../utils/pricing";
+import { BELONGINGS_ENTRANCE_NOTICE, LIABILITY_NOTICE } from "../../../utils/ownerSafety";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
-// Create a separate component that uses searchParams
-function BookingVerification({
-  bookingData,
-  setBookingData,
-  setPaymentStatus,
-  setLoading,
-}) {
-  const searchParams = useSearchParams();
+const MESSAGES = {
+  checking: ["Confirming your payment…", "This only takes a moment."],
+  starting: ["Confirming your payment…", "This only takes a moment."],
+  retrying: ["Still checking your payment…", "The connection is slow, or your payment is still being processed. We'll keep trying."],
+  offline: ["You're offline", "We'll check your payment as soon as you're back online. If you've paid, your money is safe."],
+  review: ["We received your payment", "The amount doesn't match this booking, so our team will review it. You don't need to pay again."],
+  paid: ["Booking confirmed!", "Your payment went through and your booking is in."],
+  failed: ["Payment not completed", "We couldn't find a completed payment for this booking. Please try again."],
+  error: ["We couldn't confirm it yet", "If you paid, your money is safe and we'll confirm it automatically. You can also check again, or look in My Bookings."],
+  none: ["No payment to confirm", "Your bookings and their payment status are in My Bookings."],
+};
 
-  useEffect(() => {
-    const verifyPayment = async () => {
-      try {
-        // Check if we have a reference from Paystack redirect
-        const reference = searchParams.get("reference");
+const SPINNING = ["checking", "starting", "retrying"];
+const SOFT = ["ongoing", "pending", "processing", "queued"]; // Paystack is still working on it
 
-        // If no reference in URL but booking shows paid, assume it's already verified
-        if (!reference) {
-          setPaymentStatus(
-            bookingData.paymentStatus === "paid" ? "success" : "pending"
-          );
-          setLoading(false);
-          return;
-        }
+const ICONS = {
+  offline: ["bg-yellow-100 text-yellow-600", "M12 9v4m0 4h.01"],
+  review: ["bg-brand-100 text-brand-600", "M5 13l4 4L19 7"],
+  paid: ["bg-green-100 text-green-600", "M5 13l4 4L19 7"],
+  failed: ["bg-red-100 text-red-600", "M6 18L18 6M6 6l12 12"],
+  error: ["bg-yellow-100 text-yellow-600", "M12 9v4m0 4h.01"],
+  none: ["bg-brand-100 text-brand-600", "M12 9v4m0 4h.01"],
+};
 
-        // Verify payment status with backend
-        await verifyPaymentWithBackend(reference, bookingData);
-      } catch (error) {
-        console.error("Error verifying payment:", error);
-        setPaymentStatus("error");
-        setLoading(false);
-      }
-    };
+const formatTime = (time) => {
+  if (!time || /am|pm/i.test(time)) return time || "";
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours, 10);
+  return `${hour % 12 || 12}:${minutes} ${hour < 12 ? "AM" : "PM"}`;
+};
 
-    if (bookingData) {
-      verifyPayment();
-    }
-  }, [searchParams, bookingData, setPaymentStatus, setLoading]);
+const formatDate = (date) =>
+  date
+    ? new Date(date).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    : "";
 
-  const verifyPaymentWithBackend = async (reference, parsedBooking) => {
-    try {
-      const authToken = Cookies.get("auth_token");
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/services/verify-payment`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ reference }), // << send reference inside the body
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Update payment status
-        const updatedBooking = {
-          ...parsedBooking,
-          paymentStatus: "paid",
-        };
-
-        localStorage.setItem("bookingData", JSON.stringify(updatedBooking));
-        setBookingData(updatedBooking);
-        setPaymentStatus("success");
-      } else {
-        setPaymentStatus("failed");
-      }
-    } catch (error) {
-      console.error("Backend verification failed:", error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  return null; // This component just handles the effect, no rendering
-}
-
-// Component for loading screen
-function LoadingScreen() {
+function Row({ label, children }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-700">Verifying your payment...</p>
-      </div>
+    <div className="flex justify-between gap-4 py-2">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-medium text-gray-900 text-right break-all">{children}</span>
     </div>
   );
 }
 
-
-// Component for no booking found
-function NoBookingFound({ router }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-6 bg-white rounded-lg shadow-md">
-        <svg
-          className="w-16 h-16 text-red-500 mx-auto mb-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          No Booking Data Found
-        </h2>
-        <p className="text-gray-600 mb-4">
-          We couldn't find your booking information. Let's start over.
-        </p>
-        <button
-          onClick={() => router.push("/")}
-          className="bg-brand-600 text-white px-6 py-2 rounded-lg hover:bg-brand-700 transition-colors"
-        >
-          Start New Booking
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Component for status icon
-function StatusIcon({ status }) {
-  if (status === "success") {
-    return (
-      <div className="w-20 h-20 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-6">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-10 w-10"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </div>
-    );
-  }
-
-  if (status === "failed") {
-    return (
-      <div className="w-20 h-20 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-6">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-10 w-10"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-20 h-20 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mx-auto mb-6">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-10 w-10"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01M12 5a7 7 0 110 14 7 7 0 010-14z"
-        />
-      </svg>
-    </div>
-  );
-}
-
-// Component for booking details
-function BookingDetails({
-  bookingData,
-  paymentStatus,
-  formatDate,
-  formatTime,
-}) {
-  return (
-    <div className="bg-gray-50 rounded-lg p-6 text-left mb-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        Booking Details
-      </h2>
-      <div className="space-y-3">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Service:</span>
-          <span className="font-medium text-gray-900">
-            {bookingData.serviceCategory}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Date & Time:</span>
-          <span className="font-medium text-gray-900">
-            {formatDate(bookingData.bookingDate)} at{" "}
-            {formatTime(bookingData.bookingTime)}
-          </span>
-        </div>
-        {(bookingData.details || []).map((d) => (
-          <div key={d.label} className="flex justify-between gap-4">
-            <span className="text-gray-600">{d.label}:</span>
-            <span className="font-medium text-gray-900 text-right">{d.value}</span>
-          </div>
-        ))}
-        {bookingData.amount != null && (
-          <div className="flex justify-between">
-            <span className="text-gray-600">Amount:</span>
-            <span className="font-semibold text-brand-600">
-              {formatNaira(bookingData.amount)}
-            </span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span className="text-gray-600">Location:</span>
-          <span className="font-medium text-gray-900">
-            {bookingData.location}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Payment Status:</span>
-          <span
-            className={`font-medium ${
-              paymentStatus === "success"
-                ? "text-green-600"
-                : paymentStatus === "failed"
-                ? "text-red-600"
-                : "text-yellow-600"
-            }`}
-          >
-            {paymentStatus === "success"
-              ? "Paid"
-              : paymentStatus === "failed"
-              ? "Failed"
-              : "Pending"}
-          </span>
-        </div>
-        <div className="flex justify-between pt-2 border-t">
-          <span className="text-gray-800 font-semibold">Booking ID:</span>
-          <span className="font-medium text-brand-600">
-            {bookingData.id ||
-              `#BK${Math.floor(Math.random() * 900000) + 100000}`}
-          </span>
-        </div>
-        {bookingData.paymentReference && (
-          <div className="flex justify-between">
-            <span className="text-gray-600">Payment Reference:</span>
-            <span className="font-medium text-gray-900">
-              {bookingData.paymentReference}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Component for action buttons
-function ActionButtons({ paymentStatus, router }) {
-  return (
-    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-      {paymentStatus === "failed" && (
-        <button
-          onClick={() => router.push("/booking-summary")}
-          className="py-3 px-6 border border-brand-600 text-brand-600 rounded-xl text-lg font-medium hover:bg-brand-50 transition-colors"
-        >
-          Try Again
-        </button>
-      )}
-      <button
-        onClick={() => router.push("/")}
-        className="py-3 px-6 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-colors"
-      >
-        Return to Home
-      </button>
-      {paymentStatus === "success" && (
-        <button
-          onClick={() => router.push("/booking/bookings")}
-          className="py-3 px-6 border border-brand-600 text-brand-600 rounded-xl text-lg font-medium hover:bg-brand-50 transition-colors"
-        >
-          View My Bookings
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Helper functions
-function getStatusTitle(status) {
-  switch (status) {
-    case "success":
-      return "Booking Confirmed!";
-    case "failed":
-      return "Payment Failed";
-    default:
-      return "Booking Status Pending";
-  }
-}
-
-function getStatusMessage(status) {
-  switch (status) {
-    case "success":
-      return "Your cleaning service has been successfully booked and paid for";
-    case "failed":
-      return "We couldn't complete your payment. Please try again.";
-    default:
-      return "Your booking has been received but payment status is pending.";
-  }
-}
-
-export default function BookingConfirmation() {
+function Confirmation() {
   const router = useRouter();
-  const [bookingData, setBookingData] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState("checking");
-  const [loading, setLoading] = useState(true);
+  const params = useSearchParams();
+  // Paystack sends the customer back with ?reference=...&trxref=...
+  const urlReference = params.get("reference") || params.get("trxref");
+  const [reference, setReference] = useState(urlReference);
+  const [status, setStatus] = useState(urlReference ? "checking" : "starting");
+  const [receipt, setReceipt] = useState(null);
+  const [again, setAgain] = useState(0);
+
+  // Came back without the link (lost signal, closed the tab)? The booking page kept the reference.
+  useEffect(() => {
+    if (urlReference) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("lastPaymentReference") || "null");
+      if (saved?.reference && Date.now() - saved.at < 24 * 3600 * 1000) {
+        setReference(saved.reference);
+        return;
+      }
+    } catch {}
+    setStatus("none");
+  }, [urlReference]);
 
   useEffect(() => {
-    // Load booking data from localStorage
-    const loadBookingData = () => {
-      try {
-        const confirmedBooking = localStorage.getItem("bookingData");
-        if (!confirmedBooking) {
-          setLoading(false);
-          return;
-        }
+    if (!reference) return;
+    let cancelled = false;
+    let timer;
+    let attempt = 0;
+    const DELAYS = [2000, 4000, 8000, 15000, 30000];
 
-        const parsedBooking = JSON.parse(confirmedBooking);
-        setBookingData(parsedBooking);
-      } catch (error) {
-        console.error("Error loading booking data:", error);
-        setLoading(false);
+    const retryLater = () => {
+      if (cancelled) return;
+      if (attempt < DELAYS.length) {
+        setStatus("retrying");
+        timer = setTimeout(run, DELAYS[attempt++]);
+      } else {
+        setStatus("error");
       }
     };
 
-    loadBookingData();
-  }, []);
+    const run = async () => {
+      if (cancelled) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setStatus("offline"); // the 'online' event below picks it up again
+        return;
+      }
+      setStatus((s) => (s === "retrying" || s === "offline" ? "checking" : s));
+      const controller = new AbortController();
+      const abort = setTimeout(() => controller.abort(), 20000);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/services/verify-payment`, {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        if (response.ok && data.success) {
+          setReceipt(data.data);
+          setStatus("paid");
+          try {
+            localStorage.removeItem("lastPaymentReference");
+          } catch {}
+        } else if (response.status === 409 && data.code === "amount_mismatch") {
+          setStatus("review");
+        } else if (response.status >= 500 || response.status === 429 || (response.status === 400 && SOFT.includes(data.payment_status))) {
+          retryLater();
+        } else {
+          setStatus("failed");
+        }
+      } catch {
+        retryLater(); // no connection, or it took too long
+      } finally {
+        clearTimeout(abort);
+      }
+    };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+    const onOnline = () => {
+      attempt = 0;
+      clearTimeout(timer);
+      run();
+    };
+    window.addEventListener("online", onOnline);
+    run();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [reference, again]);
 
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-    if (/am|pm/i.test(timeString)) return timeString; // already "8:00 AM"
-
-    const [hours, minutes] = timeString.split(":");
-    const hour = parseInt(hours, 10);
-
-    if (hour === 0) return "12:00 AM";
-    if (hour < 12) return `${hour}:${minutes} AM`;
-    if (hour === 12) return `12:${minutes} PM`;
-    return `${hour - 12}:${minutes} PM`;
-  };
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!bookingData) {
-    return <NoBookingFound router={router} />;
-  }
+  const [title, message] = MESSAGES[status];
+  const icon = SPINNING.includes(status) ? null : ICONS[status];
 
   return (
-    <>
-      <Head>
-        <title>Booking Confirmation | Home Services</title>
-        <meta name="description" content="Your booking status" />
-      </Head>
-
-      <div className="min-h-screen bg-gray-50">
-        {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
-          <p className="text-sm">Professional Cleaning Services</p>
-        </div>
-
-        <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-12">
-            <StatusIcon status={paymentStatus} />
-
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              {getStatusTitle(paymentStatus)}
-            </h1>
-            <p className="text-gray-600 mb-8 text-lg">
-              {getStatusMessage(paymentStatus)}
-            </p>
-
-            <BookingDetails
-              bookingData={bookingData}
-              paymentStatus={paymentStatus}
-              formatDate={formatDate}
-              formatTime={formatTime}
-            />
-
-            <ActionButtons paymentStatus={paymentStatus} router={router} />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 w-full max-w-lg text-center">
+        {icon ? (
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${icon[0]}`}>
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon[1]} />
+            </svg>
           </div>
-        </div>
+        ) : (
+          <div className="flex justify-center mb-5"><KlinerLoader size={64} tone="brand" /></div>
+        )}
 
-        {/* Wrap the component that uses searchParams in Suspense */}
-        <Suspense fallback={null}>
-          <BookingVerification
-            bookingData={bookingData}
-            setBookingData={setBookingData}
-            setPaymentStatus={setPaymentStatus}
-            setLoading={setLoading}
-          />
-        </Suspense>
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <p className="mt-2 text-gray-600">{message}</p>
+
+        {status === "paid" && (
+          <div className="mt-4 text-left text-sm text-gray-600 space-y-2 bg-brand-50 rounded-lg p-4 border border-brand-100">
+            <p>{BELONGINGS_ENTRANCE_NOTICE}</p>
+            <p>{LIABILITY_NOTICE}</p>
+          </div>
+        )}
+
+        {receipt && (
+          <div className="mt-6 bg-gray-50 rounded-lg px-4 py-2 text-left divide-y divide-gray-200 text-sm">
+            <Row label="Service">{receipt.service}</Row>
+            <Row label="Date">{formatDate(receipt.bookingDate)}</Row>
+            <Row label="Time">{formatTime(receipt.bookingTime)}</Row>
+            <Row label="Amount paid">{formatNaira(receipt.amount)}</Row>
+            <Row label="Reference">{receipt.reference}</Row>
+          </div>
+        )}
+
+        {!SPINNING.includes(status) && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            {status === "failed" && (
+              <button onClick={() => router.push("/booking-summary")} className="flex-1 py-3 rounded-lg bg-brand-600 text-white font-medium">
+                Try again
+              </button>
+            )}
+            {(status === "error" || status === "offline") && (
+              <button onClick={() => setAgain((n) => n + 1)} className="flex-1 py-3 rounded-lg bg-brand-600 text-white font-medium">
+                Check again
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/booking/bookings")}
+              className={`flex-1 py-3 rounded-lg font-medium ${
+                status === "paid" || status === "none" ? "bg-brand-600 text-white" : "border border-brand-600 text-brand-600"
+              }`}
+            >
+              My Bookings
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>
+  );
+}
+
+export default function BookingConfirmationPage() {
+  return (
+    <Suspense fallback={null}>
+      <Confirmation />
+    </Suspense>
   );
 }

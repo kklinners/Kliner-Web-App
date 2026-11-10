@@ -1,6 +1,7 @@
 // pages/house-cleaning.js
 "use client";
 
+import ServiceHeader from "../../../components/ServiceHeader";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,9 @@ import {
   DeepCleanIcon,
   MoveInIcon,
   MoveOutIcon,
+  ROOM_ICONS,
+  BookingsNavIcon,
+  ShieldCheckIcon,
 } from "../../../components/icons/KlinIcons";
 
 // API Configuration
@@ -160,7 +164,6 @@ export default function HouseCleaningPage() {
   const [pricing, setPricing] = useState({ finalPrice: 0, breakdown: {} });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showOptions, setShowOptions] = useState(false);
 
   // Service options
   const categories = [
@@ -376,84 +379,8 @@ export default function HouseCleaningPage() {
 
   // Get room icon based on room name
   const getRoomIcon = (roomName: string) => {
-    const icons = {
-      "Living Room": (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          />
-        </svg>
-      ),
-      Bedroom: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-9 3h4"
-          />
-        </svg>
-      ),
-      Bathroom: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-          />
-        </svg>
-      ),
-      Kitchen: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M3 9.5L3 14.5M12 21.5V4.5M21 9.5V14.5M12 4.5C10.8954 4.5 10 5.39543 10 6.5V8.5C10 9.60457 10.8954 10.5 12 10.5C13.1046 10.5 14 9.60457 14 8.5V6.5C14 5.39543 13.1046 4.5 12 4.5Z"
-          />
-        </svg>
-      ),
-      default: (
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      ),
-    };
-    return icons[roomName] || icons.default;
+    const Icon = ROOM_ICONS[roomName];
+    return Icon ? <Icon size={34} /> : null;
   };
 
   return (
@@ -471,76 +398,15 @@ export default function HouseCleaningPage() {
 
       <div className="min-h-screen bg-gray-50">
         {/* Top service info banner */}
-        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
-          <p className="text-sm">Professional Cleaning Services</p>
-        </div>
-
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white p-4 flex items-center border-b shadow-sm">
-          <button
-            onClick={() => router.back()}
-            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full transition-all"
-            aria-label="Go back"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">House Cleaning</h1>
-            <p className="text-sm text-gray-500 hidden md:block">
-              Customize your cleaning service
-            </p>
-          </div>
-        </div>
+        <ServiceHeader title="House Cleaning" subtitle="Customize your cleaning service" width="narrow" />
 
         <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
-          {/* Service Options Toggle */}
+          {/* Service Options */}
           <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-            <button
-              onClick={() => setShowOptions(!showOptions)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Service Options
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {selectedOptions.category} • {selectedOptions.package} •{" "}
-                  {
-                    homeSizes.find((s) => s.id === selectedOptions.homeSize)
-                      ?.name
-                  }
-                </p>
-              </div>
-              <svg
-                className={`h-5 w-5 text-gray-400 transition-transform ${
-                  showOptions ? "rotate-180" : ""
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+            <h3 className="text-lg font-medium text-gray-900">
+              Service Options
+            </h3>
 
-            {showOptions && (
               <div className="mt-6 space-y-6">
                 {/* Categories */}
                 <div>
@@ -594,69 +460,66 @@ export default function HouseCleaningPage() {
                   </div>
                 </div>
 
-                {/* Home Size & Frequency */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">
-                      Home Size
-                    </h4>
-                    <select
-                      value={selectedOptions.homeSize}
-                      onChange={(e) =>
-                        handleOptionChange("homeSize", e.target.value)
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    >
-                      {homeSizes.map((size) => (
-                        <option key={size.id} value={size.id}>
-                          {size.name}
-                        </option>
-                      ))}
-                    </select>
+                {/* Home Size */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">
+                    Home Size
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {homeSizes.map((size) => (
+                      <button
+                        key={size.id}
+                        type="button"
+                        aria-pressed={selectedOptions.homeSize === size.id}
+                        onClick={() => handleOptionChange("homeSize", size.id)}
+                        className={`p-3 rounded-lg border-2 text-left ${
+                          selectedOptions.homeSize === size.id
+                            ? "border-brand-500 bg-brand-50"
+                            : "border-gray-200 hover:border-brand-300"
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{size.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {size.description}
+                        </div>
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">
-                      Frequency
-                    </h4>
-                    <select
-                      value={selectedOptions.frequency}
-                      onChange={(e) =>
-                        handleOptionChange("frequency", e.target.value)
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    >
-                      {frequencies.map((freq) => (
-                        <option key={freq.id} value={freq.id}>
-                          {freq.name}{" "}
-                          {freq.discount > 0 && `(-${freq.discount}%)`}
-                        </option>
-                      ))}
-                    </select>
+                {/* Frequency */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">
+                    Frequency
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {frequencies.map((freq) => (
+                      <button
+                        key={freq.id}
+                        type="button"
+                        aria-pressed={selectedOptions.frequency === freq.id}
+                        onClick={() => handleOptionChange("frequency", freq.id)}
+                        className={`p-3 rounded-lg border-2 text-left ${
+                          selectedOptions.frequency === freq.id
+                            ? "border-brand-500 bg-brand-50"
+                            : "border-gray-200 hover:border-brand-300"
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{freq.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {freq.discount > 0 ? `Save ${freq.discount}%` : "No discount"}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
           </div>
 
           {/* Room Selection */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                  />
-                </svg>
-              </div>
+              <div className="w-10 h-10 flex items-center justify-center mr-3 shrink-0"><CleaningIcon size={38} /></div>
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Customize Your Cleaning
@@ -703,11 +566,7 @@ export default function HouseCleaningPage() {
                 >
                   <div className="flex items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                        items[item] > 0
-                          ? "bg-brand-200 text-brand-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
+                      className="w-10 h-10 flex items-center justify-center mr-3 shrink-0"
                     >
                       {getRoomIcon(item)}
                     </div>
@@ -758,19 +617,7 @@ export default function HouseCleaningPage() {
                   "Kitchen cleaning & countertop cleaning",
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center">
-                    <svg
-                      className="h-5 w-5 text-green-500 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <ShieldCheckIcon size={22} className="mr-2 mt-0.5 shrink-0" />
                     <span className="text-sm text-gray-700">{feature}</span>
                   </div>
                 ))}
@@ -781,21 +628,7 @@ export default function HouseCleaningPage() {
           {/* Customer Information Form */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
+              <div className="w-10 h-10 flex items-center justify-center mr-3 shrink-0"><BookingsNavIcon size={38} /></div>
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Service Details

@@ -1,6 +1,6 @@
 "use client";
+import KlinerLoader from "../../../components/KlinerLoader";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthService from "../../../../services/authService";
@@ -43,13 +43,13 @@ export default function ForgotPasswordPage() {
         setError(
           response.error ||
             response.message ||
-            "Failed to send reset link. Please try again."
+            "Failed to send reset code. Please try again."
         );
       }
     } catch (error) {
       console.error("Error sending reset link:", error);
       setError(
-        error.message || "An error occurred while sending the reset link."
+        error.message || "An error occurred while sending the reset code."
       );
     } finally {
       setIsSending(false);
@@ -70,10 +70,9 @@ export default function ForgotPasswordPage() {
         <div className="absolute inset-0 bg-brand-950/60"></div>
       </div>
 
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-6">
+          <AuthLogo />
           <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Forgot Password
           </h1>
@@ -107,7 +106,7 @@ export default function ForgotPasswordPage() {
             >
               {isSending ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Sending...
                 </>
               ) : (
@@ -118,7 +117,7 @@ export default function ForgotPasswordPage() {
 
           <div className="text-center mt-4">
             <Link
-              href="/auth/sigin"
+              href="/auth/signin"
               className="text-brand-600 text-sm hover:underline"
             >
               Back to Login

@@ -1,304 +1,145 @@
-// pages/laundry.js
 "use client";
 
-import { useState, useEffect } from "react";
-import Head from "next/head";
+import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import ServiceHeader from "../../../components/ServiceHeader";
 import { PRICING, formatNaira } from "../../../../utils/pricing";
+
+const OPTIONS = [
+  {
+    id: "washed-folded",
+    title: "Washed and Folded",
+    description: "Washed properly, then folded neatly and returned to you.",
+    steps: ["Wash", "Fold"],
+  },
+  {
+    id: "washed-ironed",
+    title: "Washed and Ironed",
+    description: "Washed properly, then pressed so it's ready to wear.",
+    steps: ["Wash", "Iron"],
+  },
+  {
+    id: "washed-ironed-folded",
+    title: "Washed, Ironed, and Folded",
+    description: "The full service: washed, pressed and folded.",
+    steps: ["Wash", "Iron", "Fold"],
+  },
+];
 
 export default function LaundryPage() {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  // Detect if viewing on desktop
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-
-    handleResize(); // Check on initial load
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const laundryOptions = [
-    {
-      id: "washed-folded",
-      title: "Washed and Folded",
-      description:
-        "Your clothes will be professionally washed and neatly folded.",
-    },
-    {
-      id: "washed-ironed",
-      title: "Washed and Ironed",
-      description:
-        "Your clothes will be professionally washed and carefully ironed.",
-    },
-    {
-      id: "washed-ironed-folded",
-      title: "Washed, Ironed, and Folded",
-      description:
-        "Complete service - your clothes will be washed, ironed, and perfectly folded.",
-    },
-  ];
-
-  const handleOptionSelect = (option) => {
-    setSelectedOption(option);
-  };
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = OPTIONS.find((o) => o.id === selectedId) || null;
+  const priceOf = (id) => PRICING.laundry.options[id]?.price;
 
   const handleContinue = () => {
-    if (selectedOption) {
-      localStorage.setItem("laundryOption", selectedOption.title);
-      localStorage.setItem(
-        "pendingBooking",
-        JSON.stringify({
-          serviceType: "laundry",
-          serviceName: "Laundry Service",
-          serviceCategory: selectedOption.title,
-          serviceData: {
-            option: selectedOption.id,
-            service: selectedOption.title,
-            category: selectedOption.title,
-          },
-          details: [{ label: "Pricing", value: "Per laundry bag (up to ~15 items)" }],
-        })
-      );
-      localStorage.removeItem("bookingSchedule");
-
-      // Navigate to the next step
-      router.push("/booking-summary");
-    }
-  };
-
-  // Get appropriate icon for laundry option
-  const getLaundryIcon = (optionId) => {
-    switch (optionId) {
-      case "washed-folded":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 3h6m-6 0a3 3 0 00-3 3v12a3 3 0 003 3h6a3 3 0 003-3V6a3 3 0 00-3-3m-6 0H6a3 3 0 00-3 3v12a3 3 0 003 3h3M6 16h12M9 12h6"
-            />
-          </svg>
-        );
-      case "washed-ironed":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-            />
-          </svg>
-        );
-      case "washed-ironed-folded":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-            />
-          </svg>
-        );
-      default:
-        return null;
-    }
+    if (!selected) return;
+    localStorage.setItem("laundryOption", selected.title);
+    localStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        serviceType: "laundry",
+        serviceName: "Laundry Service",
+        serviceCategory: selected.title,
+        serviceData: {
+          option: selected.id,
+          service: selected.title,
+          category: selected.title,
+        },
+        details: [{ label: "Pricing", value: "Per laundry bag (up to ~15 items)" }],
+      })
+    );
+    localStorage.removeItem("bookingSchedule");
+    router.push("/booking-summary");
   };
 
   return (
-    <>
-      <Head>
-        <title>Laundry Service | Home Services</title>
-        <meta name="description" content="Book our laundry service" />
-      </Head>
+    <div className="min-h-screen bg-[#EFEDE8] pb-32 lg:pb-16">
+      <ServiceHeader />
 
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white p-4 flex items-center border-b shadow-sm">
-          <button
-            onClick={() => router.back()}
-            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full transition-all"
-            aria-label="Go back"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Laundry Service
-            </h1>
-            <p className="text-sm text-gray-500 hidden md:block">
-              Select how you want your laundry done
-            </p>
-          </div>
-        </div>
+      <main className="mx-auto max-w-[1280px] px-5 sm:px-8 pt-4 lg:pt-10 grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-8 lg:gap-16 items-start">
+        <section className="lg:sticky lg:top-8">
+          <h1 className="text-[44px] sm:text-[64px] lg:text-[clamp(56px,5.6vw,88px)] font-extrabold tracking-[-0.035em] leading-[1.02] text-brand-950">
+            Laundry
+          </h1>
+          <p className="mt-4 text-[17px] text-brand-900/70 max-w-md">
+            Tell us how you want it done. One price covers a laundry bag, up to about 15 items.
+          </p>
+          <Image
+            src="/services/laundry-1.jpg"
+            alt="Illustration of a Kliner team member in uniform doing laundry"
+            width={1400}
+            height={1050}
+            priority
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className="mt-6 lg:mt-10 w-full h-auto max-h-[230px] sm:max-h-[320px] lg:max-h-none object-contain object-center lg:object-left"
+          />
+        </section>
 
-        <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        <section aria-labelledby="options-title">
+          <h2 id="options-title" className="text-[20px] font-semibold tracking-[-0.02em] text-brand-950 border-b-2 border-brand-950 pb-2.5">
+            How should we do it?
+          </h2>
+
+          <div role="radiogroup" aria-labelledby="options-title" className="mt-5 space-y-3">
+            {OPTIONS.map((option) => {
+              const on = selectedId === option.id;
+              return (
+                <label key={option.id} className="relative block cursor-pointer">
+                  <input
+                    type="radio"
+                    name="laundry-option"
+                    value={option.id}
+                    checked={on}
+                    onChange={() => setSelectedId(option.id)}
+                    className="peer sr-only"
                   />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-medium text-gray-900">
-                  Choose Your Laundry Service
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Select the option that best suits your needs
-                </p>
-              </div>
-            </div>
-
-            {/* Laundry options */}
-            <div className="space-y-3">
-              {laundryOptions.map((option) => (
-                <div
-                  key={option.id}
-                  className={`p-4 rounded-xl flex items-start border-2 transition-all duration-200 cursor-pointer ${
-                    selectedOption?.id === option.id
-                      ? "border-brand-500 bg-brand-50"
-                      : "border-gray-200 hover:border-brand-300"
-                  }`}
-                  onClick={() => handleOptionSelect(option)}
-                >
-                  <div className="mr-4 mt-1">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        selectedOption?.id === option.id
-                          ? "border-brand-600"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {selectedOption?.id === option.id && (
-                        <div className="w-3 h-3 rounded-full bg-brand-600"></div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center mb-1">
-                      <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-2">
-                        {getLaundryIcon(option.id)}
-                      </div>
-                      <span className="text-lg font-medium text-gray-900">
-                        {option.title}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 ml-10">
-                      {option.description}
-                    </p>
-                    <p className="text-sm font-semibold text-brand-600 ml-10 mt-1">
-                      {formatNaira(PRICING.laundry.options[option.id]?.price)} per bag
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Add tip */}
-            <div className="mt-6 bg-brand-50 p-4 rounded-lg border border-brand-100">
-              <div className="flex items-start">
-                <div className="mr-3 mt-1 text-brand-500">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <div
+                    className={`flex items-start gap-4 rounded-2xl p-5 sm:p-6 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand-600 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#EFEDE8] ${
+                      on ? "bg-brand-600 text-white" : "bg-white text-brand-950 hover:bg-brand-50"
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-brand-800 font-medium">
-                    Special care instructions?
-                  </p>
-                  <p className="text-xs text-brand-600 mt-1">
-                    You'll be able to add special instructions for your laundry
-                    after selecting your service.
-                  </p>
-                </div>
-              </div>
-            </div>
+                    <span
+                      aria-hidden="true"
+                      className={`mt-1 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center ${on ? "border-white" : "border-brand-900/30"}`}
+                    >
+                      {on && <span className="h-2.5 w-2.5 rounded-full bg-white" />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[19px] sm:text-[21px] font-semibold tracking-[-0.01em] leading-snug">{option.title}</span>
+                      <span className={`mt-1 block text-[15px] leading-relaxed ${on ? "text-white/85" : "text-brand-900/70"}`}>{option.description}</span>
+                      <span className={`mt-3 block text-[13px] font-bold uppercase tracking-[0.08em] ${on ? "text-brand-200" : "text-brand-600"}`}>
+                        {option.steps.join("  ·  ")}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block text-[22px] sm:text-[26px] font-extrabold tracking-[-0.02em] leading-none">{formatNaira(priceOf(option.id))}</span>
+                      <span className={`mt-1.5 block text-[13px] ${on ? "text-white/80" : "text-brand-900/60"}`}>per bag</span>
+                    </span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
 
-          {/* Continue button */}
-          <div
-            className={
-              isDesktop
-                ? "mt-6"
-                : "fixed bottom-0 left-0 right-0 p-4 bg-white border-t"
-            }
-          >
+          <div className="fixed bottom-0 inset-x-0 z-20 bg-[#EFEDE8] border-t border-brand-900/15 px-5 py-3 flex items-center gap-4 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0 lg:mt-8">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] text-brand-900/60">{selected ? selected.title : "Nothing chosen yet"}</p>
+              <p className="text-[22px] font-extrabold tracking-[-0.02em] text-brand-950 leading-tight">
+                {selected ? formatNaira(priceOf(selected.id)) : "Pick one above"}
+              </p>
+            </div>
             <button
               onClick={handleContinue}
-              className={`w-full py-4 bg-brand-600 text-white rounded-xl text-lg font-medium shadow-lg hover:bg-brand-700 transition-all duration-300 ${
-                !selectedOption ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              disabled={!selectedOption}
+              disabled={!selected}
+              className="h-[52px] px-9 rounded-full bg-brand-600 text-white text-[17px] font-semibold hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-600"
             >
               Continue
             </button>
           </div>
-        </div>
-      </div>
-    </>
+        </section>
+      </main>
+    </div>
   );
 }

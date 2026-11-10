@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import ServiceHeader from "../../components/ServiceHeader";
+import { PageLoader } from "../../components/KlinerLoader";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import Cookies from "js-cookie";
 import DateTimeSelector from "../../components/DateTimeSelector";
 import { calculatePrice, formatNaira } from "../../../utils/pricing";
+import { BELONGINGS_ENTRANCE_NOTICE, LIMITED_ACCESS_NOTICE } from "../../../utils/ownerSafety";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
@@ -84,7 +87,11 @@ export default function BookingSummary() {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [error, setError] = useState("");
+  const [limitedAccess, setLimitedAccess] = useState(true);
+  const [accessNotes, setAccessNotes] = useState("");
+  const [belongingsAck, setBelongingsAck] = useState(false);
 
   useEffect(() => {
     const pending = readJSON("pendingBooking");
@@ -99,12 +106,7 @@ export default function BookingSummary() {
 
   if (loading) {
     return (
-      <div className="min-h-screen text-black flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading your booking details...</p>
-        </div>
-      </div>
+      <PageLoader label="Loading your booking" />
     );
   }
 
@@ -136,34 +138,72 @@ export default function BookingSummary() {
     setIsSchedulerOpen(false);
   };
 
+  // Each booking attempt gets one key, kept while the details stay the same. If the connection
+  // drops and the customer presses the button again, the server hands back the same booking
+  // instead of creating a second one.
+  const attemptKey = (fingerprint: string) => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("bookingAttempt") || "null");
+      if (saved?.fp === fingerprint && saved?.key) return saved.key;
+    } catch {}
+    const key =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID().replace(/-/g, "")
+        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    try {
+      sessionStorage.setItem("bookingAttempt", JSON.stringify({ fp: fingerprint, key }));
+    } catch {}
+    return key;
+  };
+
   const handleConfirmBooking = async () => {
+    if (submittingRef.current) return; // a second tap while the first is still going
     setError("");
     if (!schedule) {
       setIsSchedulerOpen(true);
       return;
     }
-
-    const authToken = Cookies.get("auth_token");
-    const userId = readJSON("user_data")?.user_id;
-    if (!authToken || !userId) {
-      setError("Please log in again to complete your booking.");
+    if (!belongingsAck || !limitedAccess) {
+      setError("Please confirm the property safety rules before paying.");
       return;
     }
 
+    const authToken = Cookies.get("auth_token");
+    if (!authToken) {
+      setError("Please log in again to complete your booking.");
+      return;
+    }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setError("You're offline, so nothing was sent and you haven't been charged. Reconnect and press the button again.");
+      return;
+    }
+
+    submittingRef.current = true;
     setSubmitting(true);
+    const serviceData = { ...booking.serviceData, estimatedPrice: price.total };
+    const key = attemptKey(JSON.stringify({ type: booking.serviceType, serviceData: booking.serviceData, schedule }));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/services/create`, {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          user_id: userId,
           serviceType: booking.serviceType,
-          serviceData: { ...booking.serviceData, estimatedPrice: price.total },
+          serviceData,
           bookingDetails: schedule,
           customerInfo: booking.customerInfo || {},
+          customerSecurity: {
+            belongingsAcknowledged: belongingsAck,
+            limitedAccessAcknowledged: limitedAccess,
+            accessNotes: accessNotes.trim(),
+          },
+          idempotencyKey: key,
+          returnOrigin: window.location.origin,
         }),
       });
 
@@ -172,28 +212,29 @@ export default function BookingSummary() {
         throw new Error(data.message || `Booking failed (${response.status})`);
       }
 
-      const { authorization_url, reference, amount_naira } = data.data.payment;
+      const { authorization_url, reference } = data.data.payment;
+      // Kept so the payment can still be found if the customer loses connection on the way back
+      try {
+        localStorage.setItem("lastPaymentReference", JSON.stringify({ reference, at: Date.now() }));
+      } catch {}
 
-      // Saved for the confirmation page
-      localStorage.setItem(
-        "bookingData",
-        JSON.stringify({
-          id: data.data.service?._id,
-          serviceName: booking.serviceName,
-          serviceCategory: booking.serviceCategory,
-          details: booking.details,
-          ...schedule,
-          amount: amount_naira,
-          paymentStatus: "pending",
-          paymentReference: reference,
-        })
-      );
-
+      if (data.data.alreadyPaid) {
+        window.location.href = `/booking-confirmation?reference=${encodeURIComponent(reference)}`;
+        return;
+      }
       window.location.href = authorization_url;
     } catch (err) {
       console.error("Booking failed:", err);
-      setError(err.message || "Booking failed. Please try again.");
+      const lostConnection = err?.name === "AbortError" || err instanceof TypeError;
+      setError(
+        lostConnection
+          ? "The connection dropped before we heard back. You haven't been charged. Press the button again and you won't be booked twice."
+          : err.message || "Booking failed. Please try again."
+      );
       setSubmitting(false);
+      submittingRef.current = false;
+    } finally {
+      clearTimeout(timer);
     }
   };
 
@@ -210,25 +251,7 @@ export default function BookingSummary() {
       />
 
       <div className="min-h-screen text-black bg-gray-50">
-        <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-3 text-center">
-          <p className="text-sm">{booking.serviceName}</p>
-        </div>
-
-        <div className="sticky top-0 z-10 bg-white p-4 flex items-center border-b shadow-sm">
-          <button
-            onClick={() => router.back()}
-            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full"
-            aria-label="Go back"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Booking Summary</h1>
-            <p className="text-sm text-gray-500 hidden md:block">Review your booking before you pay</p>
-          </div>
-        </div>
+        <ServiceHeader title="Booking Summary" subtitle="Check everything, then pay" width="narrow" />
 
         <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8 pb-40">
           {/* Service Details */}
@@ -266,6 +289,30 @@ export default function BookingSummary() {
                 Choose date, time &amp; address
               </button>
             )}
+          </div>
+
+          <div className="bg-brand-50 border border-brand-100 rounded-xl p-6 mb-6 space-y-4">
+            <h2 className="text-lg font-semibold text-brand-950">Property safety</h2>
+            <p className="text-sm text-brand-900/80">{BELONGINGS_ENTRANCE_NOTICE}</p>
+            <p className="text-sm text-brand-900/80">{LIMITED_ACCESS_NOTICE}</p>
+            <label className="flex items-start gap-3 text-sm font-medium text-brand-950 cursor-pointer">
+              <input type="checkbox" className="mt-1" checked={belongingsAck} onChange={(e) => setBelongingsAck(e.target.checked)} />
+              I will keep belongings at the entrance and only booked areas will be accessed.
+            </label>
+            <label className="flex items-start gap-3 text-sm font-medium text-brand-950 cursor-pointer">
+              <input type="checkbox" className="mt-1" checked={limitedAccess} onChange={(e) => setLimitedAccess(e.target.checked)} />
+              I agree to the limited-access rules above.
+            </label>
+            <label className="block text-sm font-medium text-brand-800">
+              Which rooms or areas are included? (optional)
+              <textarea
+                value={accessNotes}
+                onChange={(e) => setAccessNotes(e.target.value)}
+                rows={2}
+                placeholder="e.g. Living room, kitchen and 2 bedrooms only"
+                className="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2 text-sm"
+              />
+            </label>
           </div>
 
           {/* Pricing */}

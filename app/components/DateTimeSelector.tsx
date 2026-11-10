@@ -1,9 +1,11 @@
 // components/DateTimeSelector.js
 "use client";
 
+import KlinerLoader from "./KlinerLoader";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SERVICE_AREAS, LAUNCH_DISTRICT } from "../../utils/serviceAreas";
+import Select from "./Select";
 
 // onSubmit(schedule) is optional: when given, the parent handles the schedule
 // (e.g. the summary page); otherwise it is saved and we go to /booking-summary.
@@ -317,21 +319,16 @@ export default function DateTimeSelector({
             <p className="text-xs text-gray-500 mb-2">
               Kliner is currently live in {LAUNCH_DISTRICT} only. More areas coming soon.
             </p>
-            <select
+            <Select
               id="area"
+              className="mb-3"
               value={area}
-              onChange={(e) => setArea(e.target.value)}
-              className="w-full p-3 mb-3 border border-gray-300 rounded-lg bg-white text-black"
-            >
-              <option value="" disabled>
-                Select your area
-              </option>
-              {SERVICE_AREAS.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
+              onChange={setArea}
+              options={SERVICE_AREAS}
+              placeholder="Select your area"
+              title={`Area in ${LAUNCH_DISTRICT}`}
+              triggerClassName="w-full h-[50px] px-3 border border-gray-300 rounded-lg bg-white text-black text-[16px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
             <label
               htmlFor="location"
               className="block text-base font-medium text-gray-900 mb-2"
@@ -363,26 +360,7 @@ export default function DateTimeSelector({
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <KlinerLoader size={24} className="mr-3" />
                 Processing...
               </span>
             ) : (

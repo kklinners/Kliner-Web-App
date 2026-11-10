@@ -1,5 +1,6 @@
 "use client";
 
+import Select from "../../../components/Select";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -213,15 +214,20 @@ export default function PartnerApplyPage() {
             <input required className={inputClass} value={form.owner.fullName} onChange={(e) => setNested("owner", "fullName", e.target.value)} />
           </Field>
           <Field label="ID you'll show us">
-            <select required className={inputClass} value={form.owner.idType} onChange={(e) => setNested("owner", "idType", e.target.value)}>
-              <option value="" disabled>
-                Choose one
-              </option>
-              <option value="nin">NIN slip / National ID card</option>
-              <option value="voters_card">Voter&apos;s card</option>
-              <option value="drivers_licence">Driver&apos;s licence</option>
-              <option value="intl_passport">International passport</option>
-            </select>
+            <Select
+              required
+              triggerClassName={inputClass}
+              value={form.owner.idType}
+              onChange={(v) => setNested("owner", "idType", v)}
+              placeholder="Choose one"
+              title="ID you'll show us"
+              options={[
+                { value: "nin", label: "NIN slip / National ID card" },
+                { value: "voters_card", label: "Voter's card" },
+                { value: "drivers_licence", label: "Driver's licence" },
+                { value: "intl_passport", label: "International passport" },
+              ]}
+            />
           </Field>
         </FormSection>
 

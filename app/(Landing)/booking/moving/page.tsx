@@ -1,6 +1,8 @@
 // pages/move-out.js
 "use client";
 
+import ServiceHeader from "../../../components/ServiceHeader";
+import { ROOM_ICONS } from "../../../components/icons/KlinIcons";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
@@ -82,94 +84,9 @@ export default function MoveOutPage() {
   };
 
   // Get room icon based on room name
-  const getRoomIcon = (roomName) => {
-    switch (roomName) {
-      case "Living Room":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
-        );
-      case "Bedroom":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-9 3h4"
-            />
-          </svg>
-        );
-      case "Bathroom":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-            />
-          </svg>
-        );
-      case "Kitchen":
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M3 9.5L3 14.5M12 21.5V4.5M21 9.5V14.5M12 4.5C10.8954 4.5 10 5.39543 10 6.5V8.5C10 9.60457 10.8954 10.5 12 10.5C13.1046 10.5 14 9.60457 14 8.5V6.5C14 5.39543 13.1046 4.5 12 4.5Z"
-            />
-          </svg>
-        );
-      default:
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-            />
-          </svg>
-        );
-    }
+  const getRoomIcon = (roomName: string) => {
+    const Icon = ROOM_ICONS[roomName];
+    return Icon ? <Icon size={34} /> : null;
   };
 
   return (
@@ -184,31 +101,7 @@ export default function MoveOutPage() {
 
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white p-4 flex items-center border-b shadow-sm">
-          <button
-            onClick={() => router.back()}
-            className="mr-4 text-gray-800 hover:bg-gray-100 p-2 rounded-full transition-all"
-            aria-label="Go back"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Move-out/in Package
-          </h1>
-        </div>
+        <ServiceHeader title="Moving" subtitle="Tell us how many rooms we're moving" width="narrow" />
 
         <div className="max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -235,7 +128,7 @@ export default function MoveOutPage() {
                   className="bg-white border border-gray-200 p-4 rounded-xl flex items-center justify-between hover:border-brand-300 transition-all duration-200"
                 >
                   <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center mr-3 text-brand-600">
+                    <div className="w-10 h-10 flex items-center justify-center mr-3 shrink-0">
                       {getRoomIcon(room)}
                     </div>
                     <span className="text-base font-medium text-gray-900">

@@ -1,6 +1,7 @@
 "use client";
+import KlinerLoader from "../../../components/KlinerLoader";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthService from "../../../../services/authService";
@@ -73,8 +74,7 @@ export default function VerifyEmailPage() {
     setError("");
 
     try {
-      // Call the forgot password endpoint to resend OTP
-      const response = await AuthService.forgotPassword(email);
+      const response = await AuthService.resendVerificationCode(email);
 
       if (response.success) {
         setTimer(300); // Reset timer to 5 minutes
@@ -148,10 +148,9 @@ export default function VerifyEmailPage() {
         <div className="absolute inset-0 bg-brand-950/60"></div>
       </div>
 
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-6">
+          <AuthLogo />
           <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Verify Your Email
           </h1>
@@ -201,7 +200,7 @@ export default function VerifyEmailPage() {
             >
               {isVerifying ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Verifying...
                 </>
               ) : (

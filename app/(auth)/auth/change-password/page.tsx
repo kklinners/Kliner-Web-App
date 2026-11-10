@@ -1,7 +1,8 @@
 "use client";
+import KlinerLoader from "../../../components/KlinerLoader";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import AuthService from "../../../../services/authService";
 import AuthLogo from "../../AuthLogo";
 
@@ -65,17 +66,25 @@ export default function CreateNewPasswordPage() {
       return;
     }
 
+    const pin = sessionStorage.getItem("reset_pin");
+    if (!pin) {
+      setError("Your reset session has ended. Please request a new code.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
 
     try {
       const response = await AuthService.changePassword(
         formData.email,
+        pin,
         formData.password,
         formData.confirmPassword
       );
 
       if (response.success) {
+        sessionStorage.removeItem("reset_pin");
         setIsModalOpen(true);
       } else {
         setError(
@@ -96,7 +105,7 @@ export default function CreateNewPasswordPage() {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    router.push("/auth/sigin");
+    router.push("/auth/signin");
   };
 
   return (
@@ -129,10 +138,9 @@ export default function CreateNewPasswordPage() {
       </div>
 
       {/* Right Side with Form */}
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-6">
+          <AuthLogo />
           <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Create New Password
           </h1>
@@ -211,7 +219,7 @@ export default function CreateNewPasswordPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Updating...
                 </>
               ) : (

@@ -72,6 +72,15 @@ const AuthService = {
   },
 
   // Verify email with OTP
+  resendVerificationCode: async (email) => {
+    try {
+      const response = await httpClient.post("/api/v1/auth/resend-otp", { email });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   verifyEmail: async (email, otp, showToast = false) => {
     let loadingToastId;
 
@@ -161,6 +170,7 @@ const AuthService = {
   // Change password
   changePassword: async (
     email,
+    pin,
     password,
     confirmPassword,
     showToast = false
@@ -172,8 +182,9 @@ const AuthService = {
         loadingToastId = toastUtils.loading("Updating password...");
       }
 
-      const response = await httpClient.post("/api/v1/auth/change-password", {
+      const response = await httpClient.put("/api/v1/auth/reset-password", {
         email,
+        pin,
         password,
         confirmPassword,
       });

@@ -153,7 +153,7 @@ function Hero() {
 
       {/* The whole house stays in view: never wider than its column or taller than the screen */}
       <Image
-        src="/landing/kliner-house-v3.png"
+        src="/landing/kliner-house-v4.png"
         alt="Cut-away view of a house with Kliner cleaners vacuuming, mopping and washing windows, and a Kliner van parked outside"
         width={2520}
         height={1464}

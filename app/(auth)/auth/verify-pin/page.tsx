@@ -1,8 +1,8 @@
 "use client";
 
+import KlinerLoader from "../../../components/KlinerLoader";
 import { useState, useEffect, useRef, Ref } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import AuthService from "../../../../services/authService";
 import AuthLogo from "../../AuthLogo";
 
@@ -110,6 +110,8 @@ export default function VerifyPinPage() {
     try {
       const response = await AuthService.verifyPasswordPin(email, pinValue);
       if (response.success) {
+        // The next screen must send the code again to prove who is resetting
+        sessionStorage.setItem("reset_pin", pinValue);
         setShowToast(true);
       } else {
         setError(
@@ -180,10 +182,9 @@ export default function VerifyPinPage() {
       </div>
 
       {/* Right - PIN Form */}
-      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] pt-[92px] lg:pt-[140px] pb-6">
-        <AuthLogo />
-        <div className="w-full max-w-md p-6">
-
+      <div className="relative flex-1 flex items-center justify-center bg-[#EFEDE8] py-6">
+        <div className="w-full max-w-md my-auto p-6">
+          <AuthLogo />
           <h1 className="text-2xl mb-4 text-center text-brand-950 font-semibold tracking-[-0.02em] leading-tight">
             Verify PIN
           </h1>
@@ -236,7 +237,7 @@ export default function VerifyPinPage() {
             >
               {isVerifying ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <KlinerLoader size={24} className="mr-2.5" />
                   Verifying...
                 </>
               ) : (
