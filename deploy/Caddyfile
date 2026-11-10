@@ -1,0 +1,11 @@
+# Automatic HTTPS once britharvest.store points at this server.
+britharvest.store, www.britharvest.store {
+	encode gzip
+	@api path /api/* /health
+	handle @api {
+		reverse_proxy backend:3002
+	}
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

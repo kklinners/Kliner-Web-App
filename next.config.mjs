@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone", // small self-contained build for Docker
   async redirects() {
     return [
       { source: "/booking/user-chat", destination: "/help", permanent: false },
