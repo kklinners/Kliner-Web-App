@@ -25,10 +25,19 @@ services:
     depends_on: [frontend, backend]
     # Only reachable from this server; the existing proxy forwards to it
     ports: ["127.0.0.1:8080:80"]
+    networks:
+      default:
+      shared:
+        aliases: [kliner-web]   # britpredictor's Caddy reaches us at kliner-web:80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+
+networks:
+  shared:
+    external: true
+    name: britpredictor_default
 
 volumes:
   caddy_data:
