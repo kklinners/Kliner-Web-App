@@ -1,5 +1,9 @@
-# Automatic HTTPS once britharvest.store points at this server.
-britharvest.store, www.britharvest.store {
+# Plain HTTP on the internal port only. HTTPS is handled by the proxy
+# that already owns ports 80/443 on this server.
+{
+	auto_https off
+}
+:80 {
 	encode gzip
 	@api path /api/* /health
 	handle @api {

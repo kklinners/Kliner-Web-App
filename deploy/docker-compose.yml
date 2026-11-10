@@ -23,7 +23,8 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     depends_on: [frontend, backend]
-    ports: ["80:80", "443:443"]
+    # Only reachable from this server; the existing proxy forwards to it
+    ports: ["127.0.0.1:8080:80"]
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
